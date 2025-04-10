@@ -8,12 +8,10 @@ const Layout = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
-      <ScrollArea className="flex-grow">
-        <main className="container mx-auto px-4 py-8 flex-grow">
-          <Outlet />
-        </main>
-        <Footer />
-      </ScrollArea>
+      <main className="container mx-auto px-4 py-8 flex-grow">
+        <Outlet />
+      </main>
+      <Footer />
     </div>
   );
 };

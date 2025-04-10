@@ -1,15 +1,14 @@
-
 import { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { CalendarIcon, Clock, Edit, User } from "lucide-react";
-import { getPostBySlug, BlogPost } from "@/services/blogService";
+import { getPostBySlug, type BlogPost as BlogPostType } from "@/services/blogService";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
 const BlogPost = () => {
   const { slug } = useParams<{ slug: string }>();
-  const [post, setPost] = useState<BlogPost | null>(null);
+  const [post, setPost] = useState<BlogPostType | null>(null);
   const [loading, setLoading] = useState(true);
   const { isAdmin } = useAuth();
   const navigate = useNavigate();
