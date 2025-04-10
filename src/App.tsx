@@ -15,6 +15,7 @@ import SearchResults from "./pages/SearchResults";
 import NotFound from "./pages/NotFound";
 import Layout from "./components/Layout";
 import ProtectedRoute from "./components/ProtectedRoute";
+import BlogProgressBar from "./components/BlogProgressBar";
 
 const queryClient = new QueryClient();
 
@@ -24,6 +25,7 @@ const App = () => (
       <TooltipProvider>
         <Sonner />
         <BrowserRouter>
+          <BlogProgressBar />
           <Routes>
             <Route path="/" element={<Layout />}>
               <Route index element={<Home />} />

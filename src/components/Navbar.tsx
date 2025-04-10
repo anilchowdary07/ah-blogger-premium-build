@@ -1,13 +1,18 @@
 
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Menu, Search, X } from "lucide-react";
+import { Menu, Search, X, AlignJustify } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/context/AuthContext";
 import { cn } from "@/lib/utils";
 
-const Navbar = () => {
+interface NavbarProps {
+  isSidebarOpen: boolean;
+  toggleSidebar: () => void;
+}
+
+const Navbar = ({ isSidebarOpen, toggleSidebar }: NavbarProps) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [isScrolled, setIsScrolled] = useState(false);
@@ -47,17 +52,30 @@ const Navbar = () => {
     <header 
       className={cn(
         "sticky top-0 z-50 w-full transition-all duration-200",
-        isScrolled ? "bg-white shadow-sm" : "bg-white"
+        isScrolled ? "bg-white dark:bg-gray-900 shadow-sm" : "bg-white dark:bg-gray-900"
       )}
     >
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
-          {/* Logo */}
-          <Link to="/" className="flex items-center space-x-2">
-            <h1 className="text-2xl font-serif font-bold text-blog-purple">
-              AH<span className="text-blog-dark-purple">Bloggers</span>
-            </h1>
-          </Link>
+          {/* Sidebar Toggle */}
+          <div className="flex items-center">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleSidebar}
+              className="mr-2"
+              aria-label="Toggle sidebar"
+            >
+              <AlignJustify size={20} />
+            </Button>
+            
+            {/* Logo */}
+            <Link to="/" className="flex items-center space-x-2">
+              <h1 className="text-2xl font-serif font-bold text-blog-purple dark:text-blog-light-purple">
+                AH<span className="text-blog-dark-purple dark:text-blog-purple">Bloggers</span>
+              </h1>
+            </Link>
+          </div>
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-6">
@@ -65,7 +83,7 @@ const Navbar = () => {
               <Link
                 key={category.slug}
                 to={`/category/${category.slug}`}
-                className="text-gray-700 hover:text-blog-purple transition-colors font-medium"
+                className="text-gray-700 dark:text-gray-300 hover:text-blog-purple dark:hover:text-blog-light-purple transition-colors font-medium"
               >
                 {category.name}
               </Link>
@@ -78,7 +96,7 @@ const Navbar = () => {
               <Input
                 type="search"
                 placeholder="Search..."
-                className="w-[180px] lg:w-[250px] pl-8"
+                className="w-[180px] lg:w-[250px] pl-8 dark:bg-gray-800 dark:border-gray-700 dark:placeholder:text-gray-400"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
@@ -100,7 +118,7 @@ const Navbar = () => {
               <Button 
                 variant="ghost" 
                 onClick={() => navigate("/login")}
-                className="text-blog-purple hover:text-blog-dark-purple"
+                className="text-blog-purple hover:text-blog-dark-purple dark:text-blog-light-purple dark:hover:text-white"
               >
                 Admin Login
               </Button>
@@ -117,13 +135,13 @@ const Navbar = () => {
 
         {/* Mobile Menu */}
         {isMenuOpen && (
-          <div className="md:hidden bg-white py-4 animate-fade-in">
+          <div className="md:hidden bg-white dark:bg-gray-900 py-4 animate-fade-in">
             {/* Mobile Search */}
             <form onSubmit={handleSearchSubmit} className="relative mb-4">
               <Input
                 type="search"
                 placeholder="Search..."
-                className="w-full pl-8"
+                className="w-full pl-8 dark:bg-gray-800 dark:border-gray-700"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
@@ -136,7 +154,7 @@ const Navbar = () => {
                 <Link
                   key={category.slug}
                   to={`/category/${category.slug}`}
-                  className="text-gray-700 hover:text-blog-purple transition-colors py-1"
+                  className="text-gray-700 dark:text-gray-300 hover:text-blog-purple dark:hover:text-blog-light-purple transition-colors py-1"
                   onClick={() => setIsMenuOpen(false)}
                 >
                   {category.name}
@@ -144,7 +162,7 @@ const Navbar = () => {
               ))}
 
               {/* Mobile Auth */}
-              <div className="pt-3 border-t border-gray-100">
+              <div className="pt-3 border-t border-gray-100 dark:border-gray-800">
                 {isAuthenticated ? (
                   <div className="flex flex-col space-y-3">
                     {isAdmin && (
