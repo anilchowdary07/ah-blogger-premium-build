@@ -17,30 +17,40 @@ import Layout from "./components/Layout";
 import ProtectedRoute from "./components/ProtectedRoute";
 import BlogProgressBar from "./components/BlogProgressBar";
 
-const queryClient = new QueryClient();
+// Create a client for React Query
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
       <TooltipProvider>
-        <Sonner />
         <BrowserRouter>
-          <BlogProgressBar />
-          <Routes>
-            <Route path="/" element={<Layout />}>
-              <Route index element={<Home />} />
-              <Route path="blog/:slug" element={<BlogPost />} />
-              <Route path="category/:category" element={<CategoryPage />} />
-              <Route path="search" element={<SearchResults />} />
-              <Route path="login" element={<Login />} />
-              <Route element={<ProtectedRoute />}>
-                <Route path="admin" element={<AdminDashboard />} />
-                <Route path="admin/edit/:slug" element={<AdminEditor />} />
-                <Route path="admin/new" element={<AdminEditor />} />
+          <div className="relative">
+            <Sonner position="top-right" closeButton />
+            <BlogProgressBar />
+            <Routes>
+              <Route path="/" element={<Layout />}>
+                <Route index element={<Home />} />
+                <Route path="blog/:slug" element={<BlogPost />} />
+                <Route path="category/:category" element={<CategoryPage />} />
+                <Route path="search" element={<SearchResults />} />
+                <Route path="login" element={<Login />} />
+                <Route element={<ProtectedRoute />}>
+                  <Route path="admin" element={<AdminDashboard />} />
+                  <Route path="admin/edit/:slug" element={<AdminEditor />} />
+                  <Route path="admin/new" element={<AdminEditor />} />
+                </Route>
+                <Route path="*" element={<NotFound />} />
               </Route>
-              <Route path="*" element={<NotFound />} />
-            </Route>
-          </Routes>
+            </Routes>
+          </div>
         </BrowserRouter>
       </TooltipProvider>
     </AuthProvider>

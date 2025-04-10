@@ -67,7 +67,7 @@
   }
 
   body {
-    @apply bg-background text-foreground font-sans;
+    @apply bg-background text-foreground font-sans transition-colors duration-200;
   }
 
   h1, h2, h3, h4, h5, h6 {
@@ -82,6 +82,14 @@
   
   .text-balance {
     text-wrap: balance;
+  }
+  
+  .glass-effect {
+    @apply bg-white/70 dark:bg-gray-900/70 backdrop-blur-md border border-white/10 dark:border-gray-700/30;
+  }
+  
+  .card-hover {
+    @apply transition-all duration-300 hover:-translate-y-1 hover:shadow-lg;
   }
 }
 
@@ -123,7 +131,7 @@
   }
   
   .blog-content img {
-    @apply max-w-full h-auto rounded-lg my-4;
+    @apply max-w-full h-auto rounded-lg my-4 shadow-sm;
   }
   
   .blog-content a {
@@ -132,6 +140,39 @@
 
   /* Progress bar */
   .reading-progress-bar {
-    @apply fixed top-16 left-0 h-1 bg-blog-purple dark:bg-blog-light-purple z-50 transition-all;
+    @apply fixed h-1 bg-blog-purple dark:bg-blog-light-purple z-50 transition-all;
   }
+  
+  /* Button styles */
+  .btn-premium {
+    @apply bg-gradient-to-r from-blog-purple to-blog-dark-purple text-white font-medium py-2 px-4 rounded-md hover:shadow-lg transition-all duration-300;
+  }
+  
+  /* Premium Card */
+  .premium-card {
+    @apply bg-white dark:bg-gray-800 rounded-xl shadow-smooth p-6 transition-all duration-300 hover:shadow-lg border border-gray-100 dark:border-gray-700;
+  }
+}
+
+/* Animated transitions */
+.page-transition-enter {
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+.page-transition-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 300ms, transform 300ms;
+}
+
+.page-transition-exit {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.page-transition-exit-active {
+  opacity: 0;
+  transform: translateY(-10px);
+  transition: opacity 300ms, transform 300ms;
 }

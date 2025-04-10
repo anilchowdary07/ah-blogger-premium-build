@@ -1,5 +1,5 @@
 
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { 
   Home, Bookmark, Layers, Compass, 
@@ -11,6 +11,8 @@ interface SidebarProps {
 }
 
 const Sidebar = ({ isOpen }: SidebarProps) => {
+  const location = useLocation();
+  
   const categories = [
     { name: "Technology", slug: "technology", icon: <Layers size={18} /> },
     { name: "Science", slug: "science", icon: <Compass size={18} /> },
@@ -25,6 +27,10 @@ const Sidebar = ({ isOpen }: SidebarProps) => {
     { name: "Authors", slug: "/authors", icon: <Users size={18} /> },
     { name: "Tags", slug: "/tags", icon: <Tag size={18} /> },
   ];
+
+  const isActive = (path: string) => {
+    return location.pathname === path;
+  };
 
   return (
     <aside 
@@ -44,9 +50,13 @@ const Sidebar = ({ isOpen }: SidebarProps) => {
                   <li key={item.slug}>
                     <Link
                       to={item.slug}
-                      className="flex items-center px-3 py-2 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors group"
+                      className={`flex items-center px-3 py-2 rounded-md transition-colors group
+                        ${isActive(item.slug) 
+                          ? 'bg-blog-light-purple text-blog-purple dark:bg-gray-800 dark:text-blog-light-purple' 
+                          : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
+                        }`}
                     >
-                      <span className="mr-3 text-gray-500 dark:text-gray-400 group-hover:text-blog-purple">
+                      <span className={`mr-3 ${isActive(item.slug) ? 'text-blog-purple dark:text-blog-light-purple' : 'text-gray-500 dark:text-gray-400 group-hover:text-blog-purple'}`}>
                         {item.icon}
                       </span>
                       <span className={`${!isOpen && 'md:hidden'}`}>{item.name}</span>
@@ -64,9 +74,13 @@ const Sidebar = ({ isOpen }: SidebarProps) => {
                   <li key={category.slug}>
                     <Link
                       to={`/category/${category.slug}`}
-                      className="flex items-center px-3 py-2 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors group"
+                      className={`flex items-center px-3 py-2 rounded-md transition-colors group
+                        ${location.pathname === `/category/${category.slug}` 
+                          ? 'bg-blog-light-purple text-blog-purple dark:bg-gray-800 dark:text-blog-light-purple' 
+                          : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
+                        }`}
                     >
-                      <span className="mr-3 text-gray-500 dark:text-gray-400 group-hover:text-blog-purple">
+                      <span className={`mr-3 ${location.pathname === `/category/${category.slug}` ? 'text-blog-purple dark:text-blog-light-purple' : 'text-gray-500 dark:text-gray-400 group-hover:text-blog-purple'}`}>
                         {category.icon}
                       </span>
                       <span className={`${!isOpen && 'md:hidden'}`}>{category.name}</span>

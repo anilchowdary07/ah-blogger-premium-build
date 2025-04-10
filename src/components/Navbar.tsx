@@ -1,11 +1,19 @@
 
 import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { Menu, Search, X, AlignJustify } from "lucide-react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
+import { Menu, Search, X, AlignJustify, Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/context/AuthContext";
 import { cn } from "@/lib/utils";
+import { 
+  NavigationMenu,
+  NavigationMenuContent,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList,
+  NavigationMenuTrigger,
+} from "@/components/ui/navigation-menu";
 
 interface NavbarProps {
   isSidebarOpen: boolean;
@@ -18,6 +26,7 @@ const Navbar = ({ isSidebarOpen, toggleSidebar }: NavbarProps) => {
   const [isScrolled, setIsScrolled] = useState(false);
   const { isAuthenticated, isAdmin, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -52,7 +61,9 @@ const Navbar = ({ isSidebarOpen, toggleSidebar }: NavbarProps) => {
     <header 
       className={cn(
         "sticky top-0 z-50 w-full transition-all duration-200",
-        isScrolled ? "bg-white dark:bg-gray-900 shadow-sm" : "bg-white dark:bg-gray-900"
+        isScrolled 
+          ? "bg-white dark:bg-gray-900 shadow-md" 
+          : "bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800"
       )}
     >
       <div className="container mx-auto px-4">
@@ -63,7 +74,7 @@ const Navbar = ({ isSidebarOpen, toggleSidebar }: NavbarProps) => {
               variant="ghost"
               size="icon"
               onClick={toggleSidebar}
-              className="mr-2"
+              className="mr-2 hover:bg-gray-100 dark:hover:bg-gray-800"
               aria-label="Toggle sidebar"
             >
               <AlignJustify size={20} />
@@ -78,17 +89,25 @@ const Navbar = ({ isSidebarOpen, toggleSidebar }: NavbarProps) => {
           </div>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center space-x-6">
-            {categories.map((category) => (
-              <Link
-                key={category.slug}
-                to={`/category/${category.slug}`}
-                className="text-gray-700 dark:text-gray-300 hover:text-blog-purple dark:hover:text-blog-light-purple transition-colors font-medium"
-              >
-                {category.name}
-              </Link>
-            ))}
-          </nav>
+          <NavigationMenu className="hidden md:flex">
+            <NavigationMenuList>
+              {categories.map((category) => (
+                <NavigationMenuItem key={category.slug}>
+                  <NavigationMenuLink asChild>
+                    <Link
+                      to={`/category/${category.slug}`}
+                      className={cn(
+                        "px-4 py-2 text-gray-700 dark:text-gray-300 hover:text-blog-purple dark:hover:text-blog-light-purple transition-colors font-medium",
+                        location.pathname === `/category/${category.slug}` && "text-blog-purple dark:text-blog-light-purple"
+                      )}
+                    >
+                      {category.name}
+                    </Link>
+                  </NavigationMenuLink>
+                </NavigationMenuItem>
+              ))}
+            </NavigationMenuList>
+          </NavigationMenu>
 
           {/* Search and Auth */}
           <div className="hidden md:flex items-center space-x-4">
@@ -96,12 +115,16 @@ const Navbar = ({ isSidebarOpen, toggleSidebar }: NavbarProps) => {
               <Input
                 type="search"
                 placeholder="Search..."
-                className="w-[180px] lg:w-[250px] pl-8 dark:bg-gray-800 dark:border-gray-700 dark:placeholder:text-gray-400"
+                className="w-[180px] lg:w-[250px] pl-8 dark:bg-gray-800 dark:border-gray-700 dark:placeholder:text-gray-400 rounded-full"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-400" />
             </form>
+            
+            <Button variant="ghost" size="icon" className="text-gray-500 hover:text-blog-purple">
+              <Bell size={20} />
+            </Button>
             
             {isAuthenticated ? (
               <div className="flex items-center space-x-4">
@@ -110,15 +133,19 @@ const Navbar = ({ isSidebarOpen, toggleSidebar }: NavbarProps) => {
                     Dashboard
                   </Button>
                 )}
-                <Button variant="ghost" onClick={logout}>
+                <Button 
+                  variant="ghost" 
+                  onClick={logout}
+                  className="hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/20 dark:hover:text-red-400"
+                >
                   Logout
                 </Button>
               </div>
             ) : (
               <Button 
-                variant="ghost" 
+                variant="outline" 
                 onClick={() => navigate("/login")}
-                className="text-blog-purple hover:text-blog-dark-purple dark:text-blog-light-purple dark:hover:text-white"
+                className="border-blog-purple text-blog-purple hover:bg-blog-light-purple dark:border-blog-light-purple dark:text-blog-light-purple dark:hover:bg-gray-800"
               >
                 Admin Login
               </Button>
@@ -141,7 +168,7 @@ const Navbar = ({ isSidebarOpen, toggleSidebar }: NavbarProps) => {
               <Input
                 type="search"
                 placeholder="Search..."
-                className="w-full pl-8 dark:bg-gray-800 dark:border-gray-700"
+                className="w-full pl-8 dark:bg-gray-800 dark:border-gray-700 rounded-full"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
@@ -154,7 +181,10 @@ const Navbar = ({ isSidebarOpen, toggleSidebar }: NavbarProps) => {
                 <Link
                   key={category.slug}
                   to={`/category/${category.slug}`}
-                  className="text-gray-700 dark:text-gray-300 hover:text-blog-purple dark:hover:text-blog-light-purple transition-colors py-1"
+                  className={cn(
+                    "text-gray-700 dark:text-gray-300 hover:text-blog-purple dark:hover:text-blog-light-purple transition-colors py-2 px-3 rounded-md",
+                    location.pathname === `/category/${category.slug}` && "bg-blog-light-purple text-blog-purple dark:bg-gray-800 dark:text-blog-light-purple"
+                  )}
                   onClick={() => setIsMenuOpen(false)}
                 >
                   {category.name}
@@ -182,6 +212,7 @@ const Navbar = ({ isSidebarOpen, toggleSidebar }: NavbarProps) => {
                         logout();
                         setIsMenuOpen(false);
                       }}
+                      className="hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/20 dark:hover:text-red-400"
                     >
                       Logout
                     </Button>
@@ -193,7 +224,7 @@ const Navbar = ({ isSidebarOpen, toggleSidebar }: NavbarProps) => {
                       navigate("/login");
                       setIsMenuOpen(false);
                     }}
-                    className="w-full"
+                    className="w-full border-blog-purple text-blog-purple hover:bg-blog-light-purple dark:border-blog-light-purple dark:text-blog-light-purple dark:hover:bg-gray-800"
                   >
                     Admin Login
                   </Button>
