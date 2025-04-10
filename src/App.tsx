@@ -1,4 +1,5 @@
 
+import React from "react";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -27,34 +28,38 @@ const queryClient = new QueryClient({
   },
 });
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <AuthProvider>
-      <TooltipProvider>
-        <BrowserRouter>
-          <div className="relative">
-            <Sonner position="top-right" closeButton />
-            <BlogProgressBar />
-            <Routes>
-              <Route path="/" element={<Layout />}>
-                <Route index element={<Home />} />
-                <Route path="blog/:slug" element={<BlogPost />} />
-                <Route path="category/:category" element={<CategoryPage />} />
-                <Route path="search" element={<SearchResults />} />
-                <Route path="login" element={<Login />} />
-                <Route element={<ProtectedRoute />}>
-                  <Route path="admin" element={<AdminDashboard />} />
-                  <Route path="admin/edit/:slug" element={<AdminEditor />} />
-                  <Route path="admin/new" element={<AdminEditor />} />
-                </Route>
-                <Route path="*" element={<NotFound />} />
-              </Route>
-            </Routes>
-          </div>
-        </BrowserRouter>
-      </TooltipProvider>
-    </AuthProvider>
-  </QueryClientProvider>
-);
+const App = () => {
+  return (
+    <React.StrictMode>
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
+          <TooltipProvider>
+            <BrowserRouter>
+              <div className="relative">
+                <Sonner position="top-right" closeButton />
+                <BlogProgressBar />
+                <Routes>
+                  <Route path="/" element={<Layout />}>
+                    <Route index element={<Home />} />
+                    <Route path="blog/:slug" element={<BlogPost />} />
+                    <Route path="category/:category" element={<CategoryPage />} />
+                    <Route path="search" element={<SearchResults />} />
+                    <Route path="login" element={<Login />} />
+                    <Route element={<ProtectedRoute />}>
+                      <Route path="admin" element={<AdminDashboard />} />
+                      <Route path="admin/edit/:slug" element={<AdminEditor />} />
+                      <Route path="admin/new" element={<AdminEditor />} />
+                    </Route>
+                    <Route path="*" element={<NotFound />} />
+                  </Route>
+                </Routes>
+              </div>
+            </BrowserRouter>
+          </TooltipProvider>
+        </AuthProvider>
+      </QueryClientProvider>
+    </React.StrictMode>
+  );
+};
 
 export default App;
