@@ -45,6 +45,10 @@ const App = () => {
                     <Route path="category/:category" element={<CategoryPage />} />
                     <Route path="search" element={<SearchResults />} />
                     <Route path="login" element={<Login />} />
+                    <Route path="featured" element={<Home />} />
+                    <Route path="latest" element={<Home />} />
+                    <Route path="authors" element={<Home />} />
+                    <Route path="tags" element={<Home />} />
                     <Route element={<ProtectedRoute />}>
                       <Route path="admin" element={<AdminDashboard />} />
                       <Route path="admin/edit/:slug" element={<AdminEditor />} />

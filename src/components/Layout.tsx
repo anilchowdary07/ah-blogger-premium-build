@@ -45,7 +45,12 @@ const Layout = () => {
       <div className="flex flex-1">
         <Sidebar isOpen={isSidebarOpen} />
         <main className={`transition-all duration-300 flex-grow ${isSidebarOpen ? 'md:ml-64' : ''}`}>
-          <div className="container mx-auto px-4 py-8">
+          <motion.div 
+            className="container mx-auto px-4 py-8"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+          >
             <AnimatePresence mode="wait">
               {isMounted && (
                 <motion.div
@@ -69,7 +74,7 @@ const Layout = () => {
             <ScrollArea className="h-full">
               <Outlet />
             </ScrollArea>
-          </div>
+          </motion.div>
         </main>
       </div>
       <Footer />
