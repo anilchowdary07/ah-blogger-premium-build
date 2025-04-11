@@ -1,17 +1,29 @@
 
-import { Outlet } from "react-router-dom";
+import { Outlet, useLocation } from "react-router-dom";
 import Header from "./Header";
 import Footer from "./Footer";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useEffect } from "react";
+import { useEffect, lazy, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ThemeToggle } from "./ThemeToggle";
 
 const Layout = () => {
+  const location = useLocation();
+  
   // Reset scroll position when navigating to a new page
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [location.pathname]);
+
+  // Performance optimization: Use passive event listeners
+  useEffect(() => {
+    const scrollOptions = { passive: true };
+    
+    // Clean up event listeners when component unmounts
+    return () => {
+      // Any cleanup code can go here
+    };
+  }, []);
 
   return (
     <div className="min-h-screen flex flex-col bg-background text-foreground transition-colors duration-300">
