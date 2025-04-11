@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
@@ -150,9 +151,11 @@ const AdminEditor = () => {
     enabled: isEditMode,
     staleTime: Infinity,
     retry: 2,
-    onError: (error) => {
-      console.error("Error loading post:", error);
-      toast.error("Failed to load post. Please try again.");
+    meta: {
+      onError: (error: Error) => {
+        console.error("Error loading post:", error);
+        toast.error("Failed to load post. Please try again.");
+      }
     }
   });
   
