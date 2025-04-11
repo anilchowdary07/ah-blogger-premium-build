@@ -18,6 +18,7 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
+  FormDescription,
 } from "@/components/ui/form";
 import {
   Select,
@@ -39,12 +40,9 @@ import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
-// Mock API functions - replace with actual API calls
 const fetchPost = async (slug: string) => {
-  // Simulate API delay
   await new Promise((resolve) => setTimeout(resolve, 800));
   
-  // This would be an API call in a real app
   const post = {
     id: "1",
     title: "How to Build a Blog with React",
@@ -64,10 +62,8 @@ const fetchPost = async (slug: string) => {
 };
 
 const createPost = async (postData: any) => {
-  // Simulate API delay
   await new Promise((resolve) => setTimeout(resolve, 1000));
   
-  // This would be an API call in a real app
   return {
     ...postData,
     id: Math.random().toString(36).substring(2, 9),
@@ -78,10 +74,8 @@ const createPost = async (postData: any) => {
 };
 
 const updatePost = async (postData: any) => {
-  // Simulate API delay
   await new Promise((resolve) => setTimeout(resolve, 1000));
   
-  // This would be an API call in a real app
   return {
     ...postData,
     updatedAt: new Date().toISOString(),
@@ -89,14 +83,11 @@ const updatePost = async (postData: any) => {
 };
 
 const deletePost = async (id: string) => {
-  // Simulate API delay
   await new Promise((resolve) => setTimeout(resolve, 1000));
   
-  // This would be an API call in a real app
   return { success: true };
 };
 
-// Form schema
 const postFormSchema = z.object({
   title: z.string().min(5, "Title must be at least 5 characters"),
   slug: z.string().optional(),
@@ -121,15 +112,13 @@ const AdminEditor = () => {
   const [tagInput, setTagInput] = useState("");
   const [previewMode, setPreviewMode] = useState(false);
   
-  // Fetch post data if in edit mode
   const { data: post, isLoading: isLoadingPost } = useQuery({
     queryKey: ["post", slug],
     queryFn: () => fetchPost(slug as string),
     enabled: isEditMode,
-    staleTime: Infinity, // Don't refetch automatically
+    staleTime: Infinity,
   });
   
-  // Form setup
   const form = useForm<PostFormValues>({
     resolver: zodResolver(postFormSchema),
     defaultValues: {
@@ -145,7 +134,6 @@ const AdminEditor = () => {
     },
   });
   
-  // Update form when post data is loaded
   useEffect(() => {
     if (post) {
       form.reset({
@@ -163,7 +151,6 @@ const AdminEditor = () => {
     }
   }, [post, form]);
   
-  // Create mutation
   const createMutation = useMutation({
     mutationFn: createPost,
     onSuccess: (data) => {
@@ -176,7 +163,6 @@ const AdminEditor = () => {
     },
   });
   
-  // Update mutation
   const updateMutation = useMutation({
     mutationFn: updatePost,
     onSuccess: (data) => {
@@ -189,7 +175,6 @@ const AdminEditor = () => {
     },
   });
   
-  // Delete mutation
   const deleteMutation = useMutation({
     mutationFn: deletePost,
     onSuccess: () => {
@@ -202,7 +187,6 @@ const AdminEditor = () => {
     },
   });
   
-  // Handle form submission
   const onSubmit = (values: PostFormValues) => {
     const postData = {
       ...values,
@@ -217,7 +201,6 @@ const AdminEditor = () => {
     }
   };
   
-  // Handle tag input
   const handleTagKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" && tagInput.trim()) {
       e.preventDefault();
@@ -230,19 +213,16 @@ const AdminEditor = () => {
     }
   };
   
-  // Remove tag
   const removeTag = (tagToRemove: string) => {
     const newTags = tags.filter((tag) => tag !== tagToRemove);
     setTags(newTags);
     form.setValue("tags", newTags);
   };
   
-  // Auto-generate slug from title
   const generateSlug = useCallback((title: string) => {
     return title.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
   }, []);
   
-  // Update slug when title changes
   useEffect(() => {
     const subscription = form.watch((value, { name }) => {
       if (name === "title" && value.title) {
@@ -253,7 +233,6 @@ const AdminEditor = () => {
     return () => subscription.unsubscribe();
   }, [form, generateSlug]);
   
-  // Handle delete confirmation
   const handleDelete = () => {
     if (window.confirm("Are you sure you want to delete this post? This action cannot be undone.")) {
       if (post) {
