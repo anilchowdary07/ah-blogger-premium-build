@@ -5,6 +5,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
+import { ThemeProvider } from "./components/ThemeProvider";
 
 // Lazy load components for better performance
 const Home = lazy(() => import("./pages/Home"));
@@ -21,8 +22,6 @@ const Terms = lazy(() => import("./pages/Terms"));
 const Layout = lazy(() => import("./components/Layout"));
 const ProtectedRoute = lazy(() => import("./components/ProtectedRoute"));
 const BlogProgressBar = lazy(() => import("./components/BlogProgressBar"));
-
-import { ThemeProvider } from "./components/ThemeProvider";
 
 // Loading fallback for lazy-loaded components
 const LoadingFallback = () => (
@@ -50,46 +49,44 @@ const queryClient = new QueryClient({
 
 const App = () => {
   return (
-    <React.StrictMode>
-      <QueryClientProvider client={queryClient}>
-        <ThemeProvider defaultTheme="system" storageKey="blog-theme">
-          <AuthProvider>
-            <TooltipProvider>
-              <BrowserRouter>
-                <div className="relative">
-                  <Sonner position="top-right" closeButton />
-                  <BlogProgressBar />
-                  <Suspense fallback={<LoadingFallback />}>
-                    <Routes>
-                      <Route path="/" element={<Layout />}>
-                        <Route index element={<Home />} />
-                        <Route path="blog/:slug" element={<BlogPost />} />
-                        <Route path="category/:category" element={<CategoryPage />} />
-                        <Route path="search" element={<SearchResults />} />
-                        <Route path="login" element={<Login />} />
-                        <Route path="featured" element={<Home />} />
-                        <Route path="latest" element={<Home />} />
-                        <Route path="authors" element={<Home />} />
-                        <Route path="tags" element={<Home />} />
-                        <Route path="about-us" element={<AboutUs />} />
-                        <Route path="company" element={<Company />} />
-                        <Route path="terms" element={<Terms />} />
-                        <Route element={<ProtectedRoute />}>
-                          <Route path="admin" element={<AdminDashboard />} />
-                          <Route path="admin/edit/:slug" element={<AdminEditor />} />
-                          <Route path="admin/new" element={<AdminEditor />} />
-                        </Route>
-                        <Route path="*" element={<NotFound />} />
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider defaultTheme="system" storageKey="blog-theme">
+        <AuthProvider>
+          <TooltipProvider>
+            <BrowserRouter>
+              <div className="relative">
+                <Sonner position="top-right" closeButton />
+                <BlogProgressBar />
+                <Suspense fallback={<LoadingFallback />}>
+                  <Routes>
+                    <Route path="/" element={<Layout />}>
+                      <Route index element={<Home />} />
+                      <Route path="blog/:slug" element={<BlogPost />} />
+                      <Route path="category/:category" element={<CategoryPage />} />
+                      <Route path="search" element={<SearchResults />} />
+                      <Route path="login" element={<Login />} />
+                      <Route path="featured" element={<Home />} />
+                      <Route path="latest" element={<Home />} />
+                      <Route path="authors" element={<Home />} />
+                      <Route path="tags" element={<Home />} />
+                      <Route path="about-us" element={<AboutUs />} />
+                      <Route path="company" element={<Company />} />
+                      <Route path="terms" element={<Terms />} />
+                      <Route element={<ProtectedRoute />}>
+                        <Route path="admin" element={<AdminDashboard />} />
+                        <Route path="admin/edit/:slug" element={<AdminEditor />} />
+                        <Route path="admin/new" element={<AdminEditor />} />
                       </Route>
-                    </Routes>
-                  </Suspense>
-                </div>
-              </BrowserRouter>
-            </TooltipProvider>
-          </AuthProvider>
-        </ThemeProvider>
-      </QueryClientProvider>
-    </React.StrictMode>
+                      <Route path="*" element={<NotFound />} />
+                    </Route>
+                  </Routes>
+                </Suspense>
+              </div>
+            </BrowserRouter>
+          </TooltipProvider>
+        </AuthProvider>
+      </ThemeProvider>
+    </QueryClientProvider>
   );
 };
 
