@@ -17,13 +17,18 @@ import NotFound from "./pages/NotFound";
 import Layout from "./components/Layout";
 import ProtectedRoute from "./components/ProtectedRoute";
 import BlogProgressBar from "./components/BlogProgressBar";
+import { ThemeProvider } from "./components/ThemeProvider";
 
-// Create a client for React Query
+// Create a client for React Query with persistence
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 5 * 60 * 1000, // 5 minutes
       refetchOnWindowFocus: false,
+      retry: 1,
+      gcTime: 10 * 60 * 1000, // 10 minutes
+      // This will help with blog post persistence
+      refetchOnMount: true,
     },
   },
 });
@@ -32,35 +37,37 @@ const App = () => {
   return (
     <React.StrictMode>
       <QueryClientProvider client={queryClient}>
-        <AuthProvider>
-          <TooltipProvider>
-            <BrowserRouter>
-              <div className="relative">
-                <Sonner position="top-right" closeButton />
-                <BlogProgressBar />
-                <Routes>
-                  <Route path="/" element={<Layout />}>
-                    <Route index element={<Home />} />
-                    <Route path="blog/:slug" element={<BlogPost />} />
-                    <Route path="category/:category" element={<CategoryPage />} />
-                    <Route path="search" element={<SearchResults />} />
-                    <Route path="login" element={<Login />} />
-                    <Route path="featured" element={<Home />} />
-                    <Route path="latest" element={<Home />} />
-                    <Route path="authors" element={<Home />} />
-                    <Route path="tags" element={<Home />} />
-                    <Route element={<ProtectedRoute />}>
-                      <Route path="admin" element={<AdminDashboard />} />
-                      <Route path="admin/edit/:slug" element={<AdminEditor />} />
-                      <Route path="admin/new" element={<AdminEditor />} />
+        <ThemeProvider defaultTheme="system" storageKey="blog-theme">
+          <AuthProvider>
+            <TooltipProvider>
+              <BrowserRouter>
+                <div className="relative">
+                  <Sonner position="top-right" closeButton />
+                  <BlogProgressBar />
+                  <Routes>
+                    <Route path="/" element={<Layout />}>
+                      <Route index element={<Home />} />
+                      <Route path="blog/:slug" element={<BlogPost />} />
+                      <Route path="category/:category" element={<CategoryPage />} />
+                      <Route path="search" element={<SearchResults />} />
+                      <Route path="login" element={<Login />} />
+                      <Route path="featured" element={<Home />} />
+                      <Route path="latest" element={<Home />} />
+                      <Route path="authors" element={<Home />} />
+                      <Route path="tags" element={<Home />} />
+                      <Route element={<ProtectedRoute />}>
+                        <Route path="admin" element={<AdminDashboard />} />
+                        <Route path="admin/edit/:slug" element={<AdminEditor />} />
+                        <Route path="admin/new" element={<AdminEditor />} />
+                      </Route>
+                      <Route path="*" element={<NotFound />} />
                     </Route>
-                    <Route path="*" element={<NotFound />} />
-                  </Route>
-                </Routes>
-              </div>
-            </BrowserRouter>
-          </TooltipProvider>
-        </AuthProvider>
+                  </Routes>
+                </div>
+              </BrowserRouter>
+            </TooltipProvider>
+          </AuthProvider>
+        </ThemeProvider>
       </QueryClientProvider>
     </React.StrictMode>
   );

@@ -33,7 +33,7 @@ const BlogProgressBar = () => {
   if (!isBlogPost) return null;
 
   return (
-    <div className="fixed top-16 left-0 right-0 z-50 h-1 bg-gray-200 dark:bg-gray-800">
+    <div className="fixed top-16 left-0 right-0 z-50 h-1 bg-muted">
       <motion.div 
         className="h-full"
         style={{ 

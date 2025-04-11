@@ -1,82 +1,48 @@
 
 import { Outlet } from "react-router-dom";
-import Navbar from "./Navbar";
+import Header from "./Header";
 import Footer from "./Footer";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import Sidebar from "./Sidebar";
-import { useState, useEffect } from "react";
-import { Sun, Moon } from "lucide-react";
-import { Button } from "./ui/button";
+import { useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { ThemeToggle } from "./ThemeToggle";
 
 const Layout = () => {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const [isDarkMode, setIsDarkMode] = useState(false);
-  const [isMounted, setIsMounted] = useState(false);
-  
-  // Check for saved theme preference
+  // Reset scroll position when navigating to a new page
   useEffect(() => {
-    setIsMounted(true);
-    const savedTheme = localStorage.getItem("theme");
-    if (savedTheme === "dark" || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-      setIsDarkMode(true);
-      document.documentElement.classList.add("dark");
-    }
-  }, []);
-  
-  // Toggle dark mode
-  const toggleDarkMode = () => {
-    if (isDarkMode) {
-      document.documentElement.classList.remove("dark");
-      localStorage.setItem("theme", "light");
-    } else {
-      document.documentElement.classList.add("dark");
-      localStorage.setItem("theme", "dark");
-    }
-    setIsDarkMode(!isDarkMode);
-  };
+    window.scrollTo(0, 0);
+  }, [location.pathname]);
 
   return (
-    <div className={`min-h-screen flex flex-col ${isDarkMode ? 'dark' : ''}`}>
-      <Navbar 
-        isSidebarOpen={isSidebarOpen} 
-        toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
-      />
-      <div className="flex flex-1">
-        <Sidebar isOpen={isSidebarOpen} />
-        <main className={`transition-all duration-300 flex-grow ${isSidebarOpen ? 'md:ml-64' : ''}`}>
-          <motion.div 
-            className="container mx-auto px-4 py-8"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
-          >
-            <AnimatePresence mode="wait">
-              {isMounted && (
-                <motion.div
-                  className="fixed bottom-6 right-6 z-40"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: 10 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    className="rounded-full shadow-lg bg-white dark:bg-gray-800 hover:shadow-xl transition-all"
-                    onClick={toggleDarkMode}
-                  >
-                    {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
-                  </Button>
-                </motion.div>
-              )}
-            </AnimatePresence>
-            <ScrollArea className="h-full">
-              <Outlet />
-            </ScrollArea>
-          </motion.div>
-        </main>
-      </div>
+    <div className="min-h-screen flex flex-col bg-background text-foreground transition-colors duration-300">
+      <Header />
+      <main className="flex-grow">
+        <motion.div 
+          className="container mx-auto px-4 py-8"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+        >
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={location.pathname}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              <ScrollArea className="h-full">
+                <Outlet />
+              </ScrollArea>
+            </motion.div>
+          </AnimatePresence>
+          
+          {/* Floating theme toggle */}
+          <div className="fixed bottom-6 right-6 z-40">
+            <ThemeToggle />
+          </div>
+        </motion.div>
+      </main>
       <Footer />
     </div>
   );
