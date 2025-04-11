@@ -52,7 +52,7 @@ const Login = () => {
               <Input
                 id="email"
                 type="email"
-                placeholder="admin@ahbloggers.com"
+                placeholder="admin@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -72,8 +72,8 @@ const Login = () => {
             {/* Note: In a real app, this would be hidden */}
             <div className="text-xs text-gray-500 p-2 bg-gray-50 rounded border border-gray-100">
               <p className="font-semibold mb-1">Demo Credentials:</p>
-              <p>Email: admin@ahbloggers.com</p>
-              <p>Password: admin123</p>
+              <p>Email: admin@example.com</p>
+              <p>Password: password123</p>
             </div>
           </CardContent>
           <CardFooter>

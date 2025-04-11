@@ -39,7 +39,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = async (email: string, password: string): Promise<boolean> => {
     // In a real app, you'd validate against a backend
     // For demo, we'll use hardcoded admin credentials
-    if (email === "admin@ahbloggers.com" && password === "admin123") {
+    if (email === "admin@example.com" && password === "password123") {
       const userData: User = {
         name: "Admin User",
         email: email,
