@@ -41,51 +41,82 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 const fetchPost = async (slug: string) => {
-  await new Promise((resolve) => setTimeout(resolve, 800));
-  
-  const post = {
-    id: "1",
-    title: "How to Build a Blog with React",
-    slug: "how-to-build-blog-react",
-    content: "This is a comprehensive guide to building a blog with React...",
-    excerpt: "Learn the fundamentals of creating a blog with React and modern tools",
-    category: "technology",
-    tags: ["react", "javascript", "web development"],
-    featured: true,
-    published: true,
-    publishedAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-    coverImage: "https://images.unsplash.com/photo-1587620962725-abab7fe55159",
-  };
-  
-  return post;
+  try {
+    await new Promise((resolve) => setTimeout(resolve, 800));
+    
+    const post = {
+      id: "1",
+      title: "How to Build a Blog with React",
+      slug: "how-to-build-blog-react",
+      content: "This is a comprehensive guide to building a blog with React...",
+      excerpt: "Learn the fundamentals of creating a blog with React and modern tools",
+      category: "technology",
+      tags: ["react", "javascript", "web development"],
+      featured: true,
+      published: true,
+      publishedAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      coverImage: "https://images.unsplash.com/photo-1587620962725-abab7fe55159",
+    };
+    
+    console.log("Fetched post:", post);
+    return post;
+  } catch (error) {
+    console.error("Error fetching post:", error);
+    throw error;
+  }
 };
 
 const createPost = async (postData: any) => {
-  await new Promise((resolve) => setTimeout(resolve, 1000));
-  
-  return {
-    ...postData,
-    id: Math.random().toString(36).substring(2, 9),
-    slug: postData.slug || postData.title.toLowerCase().replace(/\s+/g, "-"),
-    publishedAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  };
+  try {
+    console.log("Creating post with data:", postData);
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    
+    const newPost = {
+      ...postData,
+      id: Math.random().toString(36).substring(2, 9),
+      slug: postData.slug || postData.title.toLowerCase().replace(/\s+/g, "-"),
+      publishedAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    
+    console.log("Created post:", newPost);
+    return newPost;
+  } catch (error) {
+    console.error("Error creating post:", error);
+    throw error;
+  }
 };
 
 const updatePost = async (postData: any) => {
-  await new Promise((resolve) => setTimeout(resolve, 1000));
-  
-  return {
-    ...postData,
-    updatedAt: new Date().toISOString(),
-  };
+  try {
+    console.log("Updating post with data:", postData);
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    
+    const updatedPost = {
+      ...postData,
+      updatedAt: new Date().toISOString(),
+    };
+    
+    console.log("Updated post:", updatedPost);
+    return updatedPost;
+  } catch (error) {
+    console.error("Error updating post:", error);
+    throw error;
+  }
 };
 
 const deletePost = async (id: string) => {
-  await new Promise((resolve) => setTimeout(resolve, 1000));
-  
-  return { success: true };
+  try {
+    console.log("Deleting post with ID:", id);
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    
+    console.log("Post deleted successfully");
+    return { success: true };
+  } catch (error) {
+    console.error("Error deleting post:", error);
+    throw error;
+  }
 };
 
 const postFormSchema = z.object({
@@ -111,12 +142,18 @@ const AdminEditor = () => {
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState("");
   const [previewMode, setPreviewMode] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   
   const { data: post, isLoading: isLoadingPost } = useQuery({
     queryKey: ["post", slug],
     queryFn: () => fetchPost(slug as string),
     enabled: isEditMode,
     staleTime: Infinity,
+    retry: 2,
+    onError: (error) => {
+      console.error("Error loading post:", error);
+      toast.error("Failed to load post. Please try again.");
+    }
   });
   
   const form = useForm<PostFormValues>({
@@ -136,6 +173,7 @@ const AdminEditor = () => {
   
   useEffect(() => {
     if (post) {
+      console.log("Setting form values from post:", post);
       form.reset({
         title: post.title,
         slug: post.slug,
@@ -153,26 +191,44 @@ const AdminEditor = () => {
   
   const createMutation = useMutation({
     mutationFn: createPost,
+    onMutate: () => {
+      setIsSaving(true);
+      console.log("Starting create mutation");
+    },
     onSuccess: (data) => {
+      console.log("Create mutation successful:", data);
       queryClient.invalidateQueries({ queryKey: ["posts"] });
       toast.success("Post created successfully!");
       navigate(`/admin/edit/${data.slug}`);
     },
-    onError: () => {
+    onError: (error) => {
+      console.error("Create mutation error:", error);
       toast.error("Failed to create post. Please try again.");
     },
+    onSettled: () => {
+      setIsSaving(false);
+    }
   });
   
   const updateMutation = useMutation({
     mutationFn: updatePost,
+    onMutate: () => {
+      setIsSaving(true);
+      console.log("Starting update mutation");
+    },
     onSuccess: (data) => {
+      console.log("Update mutation successful:", data);
       queryClient.invalidateQueries({ queryKey: ["posts"] });
       queryClient.invalidateQueries({ queryKey: ["post", slug] });
       toast.success("Post updated successfully!");
     },
-    onError: () => {
+    onError: (error) => {
+      console.error("Update mutation error:", error);
       toast.error("Failed to update post. Please try again.");
     },
+    onSettled: () => {
+      setIsSaving(false);
+    }
   });
   
   const deleteMutation = useMutation({
@@ -182,7 +238,8 @@ const AdminEditor = () => {
       toast.success("Post deleted successfully!");
       navigate("/admin");
     },
-    onError: () => {
+    onError: (error) => {
+      console.error("Delete mutation error:", error);
       toast.error("Failed to delete post. Please try again.");
     },
   });
@@ -194,9 +251,14 @@ const AdminEditor = () => {
       slug: values.slug || values.title.toLowerCase().replace(/\s+/g, "-"),
     };
     
+    console.log("Form submitted with values:", values);
+    console.log("Processed post data:", postData);
+    
     if (isEditMode && post) {
+      console.log("Updating existing post");
       updateMutation.mutate({ ...post, ...postData });
     } else {
+      console.log("Creating new post");
       createMutation.mutate(postData);
     }
   };
@@ -241,7 +303,7 @@ const AdminEditor = () => {
     }
   };
   
-  const isSubmitting = createMutation.isPending || updateMutation.isPending;
+  const isSubmitting = createMutation.isPending || updateMutation.isPending || isSaving;
   const isDeleting = deleteMutation.isPending;
   
   if (isLoadingPost && isEditMode) {

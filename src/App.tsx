@@ -19,6 +19,8 @@ const NotFound = lazy(() => import("./pages/NotFound"));
 const AboutUs = lazy(() => import("./pages/AboutUs"));
 const Company = lazy(() => import("./pages/Company"));
 const Terms = lazy(() => import("./pages/Terms"));
+const Contact = lazy(() => import("./pages/Contact"));
+const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
 const Layout = lazy(() => import("./components/Layout"));
 const ProtectedRoute = lazy(() => import("./components/ProtectedRoute"));
 const BlogProgressBar = lazy(() => import("./components/BlogProgressBar"));
@@ -69,7 +71,10 @@ const App = () => {
                       <Route path="latest" element={<Home />} />
                       <Route path="authors" element={<Home />} />
                       <Route path="tags" element={<Home />} />
+                      <Route path="about" element={<AboutUs />} />
                       <Route path="about-us" element={<AboutUs />} />
+                      <Route path="contact" element={<Contact />} />
+                      <Route path="privacy-policy" element={<PrivacyPolicy />} />
                       <Route path="company" element={<Company />} />
                       <Route path="terms" element={<Terms />} />
                       <Route element={<ProtectedRoute />}>
