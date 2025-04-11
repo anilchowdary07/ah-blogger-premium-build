@@ -1,3 +1,4 @@
+
 import React, { lazy, Suspense } from "react";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -41,9 +42,8 @@ const queryClient = new QueryClient({
       staleTime: 5 * 60 * 1000, // 5 minutes
       refetchOnWindowFocus: false,
       retry: 1,
-      gcTime: 10 * 60 * 1000, // 10 minutes
+      gcTime: 10 * 60 * 1000, // 10 minutes (formerly cacheTime)
       refetchOnMount: true,
-      cacheTime: 15 * 60 * 1000, // 15 minutes
     },
   },
 });
