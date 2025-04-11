@@ -14,6 +14,8 @@ import AdminEditor from "./pages/AdminEditor";
 import CategoryPage from "./pages/CategoryPage";
 import SearchResults from "./pages/SearchResults";
 import NotFound from "./pages/NotFound";
+import AboutUs from "./pages/AboutUs";
+import Company from "./pages/Company";
 import Layout from "./components/Layout";
 import ProtectedRoute from "./components/ProtectedRoute";
 import BlogProgressBar from "./components/BlogProgressBar";
@@ -55,6 +57,8 @@ const App = () => {
                       <Route path="latest" element={<Home />} />
                       <Route path="authors" element={<Home />} />
                       <Route path="tags" element={<Home />} />
+                      <Route path="about-us" element={<AboutUs />} />
+                      <Route path="company" element={<Company />} />
                       <Route element={<ProtectedRoute />}>
                         <Route path="admin" element={<AdminDashboard />} />
                         <Route path="admin/edit/:slug" element={<AdminEditor />} />
