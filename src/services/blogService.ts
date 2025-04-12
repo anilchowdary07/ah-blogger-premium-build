@@ -1,6 +1,10 @@
 
-// This is a mock service that would normally connect to a backend API
-// In a real application, this would make API calls to your server
+// Blog service that connects to JSON Server API
+import { toast } from "sonner";
+
+// API URL - Replace with your actual deployed API URL when you have it
+// For local development, use http://localhost:3000
+const API_URL = "http://localhost:3000";
 
 export interface BlogPost {
   id: string;
@@ -20,7 +24,7 @@ export interface BlogPost {
   updatedAt?: string;
 }
 
-// Initial mock blog posts
+// Fallback to initial blog posts if the API is not available
 const initialBlogPosts: BlogPost[] = [
   {
     id: "1",
@@ -517,97 +521,170 @@ const initialBlogPosts: BlogPost[] = [
   },
 ];
 
-// Load posts from localStorage or use initial posts if none exist
-const loadPosts = (): BlogPost[] => {
+// Helper function to load posts from API with localStorage fallback
+const loadPosts = async (): Promise<BlogPost[]> => {
   try {
-    const savedPosts = localStorage.getItem('blogPosts');
-    if (savedPosts) {
-      const parsedPosts = JSON.parse(savedPosts);
-      console.log("Loaded posts from localStorage:", parsedPosts.length);
-      return parsedPosts;
+    console.log("Attempting to fetch posts from API");
+    const response = await fetch(`${API_URL}/posts`);
+    
+    if (!response.ok) {
+      throw new Error(`API error: ${response.status}`);
     }
-  } catch (error) {
-    console.error('Error parsing saved posts:', error);
-  }
-  
-  console.log("Using initial blog posts");
-  // If localStorage is empty or fails, initialize with default posts and save them
-  localStorage.setItem('blogPosts', JSON.stringify(initialBlogPosts));
-  return [...initialBlogPosts];
-};
-
-// Save posts to localStorage
-const savePosts = (posts: BlogPost[]) => {
-  try {
+    
+    const posts = await response.json();
+    console.log("Loaded posts from API:", posts.length);
+    
+    // Cache the data in localStorage as a backup
     localStorage.setItem('blogPosts', JSON.stringify(posts));
-    console.log("Saved posts to localStorage:", posts.length);
+    
+    return posts;
   } catch (error) {
-    console.error("Error saving posts to localStorage:", error);
+    console.error("Error loading posts from API:", error);
+    console.log("Falling back to localStorage");
+    
+    // Try to get from localStorage
+    try {
+      const savedPosts = localStorage.getItem('blogPosts');
+      if (savedPosts) {
+        const parsedPosts = JSON.parse(savedPosts);
+        console.log("Loaded posts from localStorage:", parsedPosts.length);
+        return parsedPosts;
+      }
+    } catch (localError) {
+      console.error("Error loading from localStorage:", localError);
+    }
+    
+    // Last resort - use initial posts
+    console.log("Using initial blog posts");
+    toast.error("Unable to connect to the blog server. Using initial data.");
+    return [...initialBlogPosts];
   }
 };
 
-// In-memory storage for blog posts that syncs with localStorage
-let mockBlogPosts: BlogPost[] = loadPosts();
+// In-memory cache of blog posts
+let postCache: BlogPost[] = [];
+
+// Init the cache
+(async () => {
+  try {
+    postCache = await loadPosts();
+  } catch (error) {
+    console.error("Failed to initialize post cache:", error);
+    postCache = [...initialBlogPosts];
+  }
+})();
 
 // Get all blog posts
-export const getAllPosts = () => {
-  // Reload from localStorage to ensure we have the latest
-  mockBlogPosts = loadPosts();
-  return [...mockBlogPosts];
+export const getAllPosts = async () => {
+  try {
+    postCache = await loadPosts();
+    return [...postCache];
+  } catch (error) {
+    console.error("Error in getAllPosts:", error);
+    return [...postCache];
+  }
 };
 
 // Get featured posts
-export const getFeaturedPosts = () => {
-  // Reload from localStorage
-  mockBlogPosts = loadPosts();
-  return mockBlogPosts.filter(post => post.featured);
+export const getFeaturedPosts = async () => {
+  try {
+    const posts = await loadPosts();
+    return posts.filter(post => post.featured);
+  } catch (error) {
+    console.error("Error in getFeaturedPosts:", error);
+    return postCache.filter(post => post.featured);
+  }
 };
 
 // Get post by slug
-export const getPostBySlug = (slug: string) => {
-  // Reload from localStorage
-  mockBlogPosts = loadPosts();
+export const getPostBySlug = async (slug: string) => {
   console.log(`Looking for post with slug: ${slug}`);
-  console.log(`Found ${mockBlogPosts.length} posts in total`);
-  const post = mockBlogPosts.find(post => post.slug === slug);
-  console.log("Found post:", post ? post.title : "Not found");
-  return post;
+  
+  try {
+    // Try to get from API first
+    const response = await fetch(`${API_URL}/posts?slug=${slug}`);
+    
+    if (!response.ok) {
+      throw new Error(`API error: ${response.status}`);
+    }
+    
+    const posts = await response.json();
+    console.log("API response for slug:", posts);
+    
+    if (posts.length > 0) {
+      return posts[0];
+    }
+    
+    throw new Error("Post not found in API");
+  } catch (error) {
+    console.error(`Error fetching post by slug ${slug}:`, error);
+    
+    // Fallback to cache
+    console.log(`Looking in cache for slug: ${slug}`);
+    const post = postCache.find(post => post.slug === slug);
+    console.log("Found in cache:", post ? post.title : "Not found");
+    return post;
+  }
 };
 
 // Get posts by category
-export const getPostsByCategory = (category: string) => {
-  // Reload from localStorage
-  mockBlogPosts = loadPosts();
-  return mockBlogPosts.filter(post => post.category === category);
+export const getPostsByCategory = async (category: string) => {
+  try {
+    const response = await fetch(`${API_URL}/posts?category=${category}`);
+    if (!response.ok) throw new Error(`API error: ${response.status}`);
+    return await response.json();
+  } catch (error) {
+    console.error("Error in getPostsByCategory:", error);
+    return postCache.filter(post => post.category === category);
+  }
 };
 
 // Search posts
-export const searchPosts = (query: string) => {
-  // Reload from localStorage
-  mockBlogPosts = loadPosts();
-  const lowercaseQuery = query.toLowerCase();
-  return mockBlogPosts.filter(post => 
-    post.title.toLowerCase().includes(lowercaseQuery) || 
-    post.excerpt.toLowerCase().includes(lowercaseQuery) || 
-    post.content.toLowerCase().includes(lowercaseQuery) ||
-    post.tags.some(tag => tag.toLowerCase().includes(lowercaseQuery)) ||
-    post.category.toLowerCase().includes(lowercaseQuery)
-  );
+export const searchPosts = async (query: string) => {
+  try {
+    // For full text search, we'll need to fetch all posts and filter
+    const posts = await loadPosts();
+    const lowercaseQuery = query.toLowerCase();
+    
+    return posts.filter(post => 
+      post.title.toLowerCase().includes(lowercaseQuery) || 
+      post.excerpt.toLowerCase().includes(lowercaseQuery) || 
+      post.content.toLowerCase().includes(lowercaseQuery) ||
+      post.tags.some(tag => tag.toLowerCase().includes(lowercaseQuery)) ||
+      post.category.toLowerCase().includes(lowercaseQuery)
+    );
+  } catch (error) {
+    console.error("Error in searchPosts:", error);
+    
+    // Fallback to cache
+    const lowercaseQuery = query.toLowerCase();
+    return postCache.filter(post => 
+      post.title.toLowerCase().includes(lowercaseQuery) || 
+      post.excerpt.toLowerCase().includes(lowercaseQuery) || 
+      post.content.toLowerCase().includes(lowercaseQuery) ||
+      post.tags.some(tag => tag.toLowerCase().includes(lowercaseQuery)) ||
+      post.category.toLowerCase().includes(lowercaseQuery)
+    );
+  }
 };
 
 // Get all categories
-export const getCategories = () => {
-  // Reload from localStorage
-  mockBlogPosts = loadPosts();
-  const categories = mockBlogPosts.map(post => post.category);
-  return [...new Set(categories)];
+export const getCategories = async () => {
+  try {
+    const posts = await loadPosts();
+    const categories = posts.map(post => post.category);
+    return [...new Set(categories)];
+  } catch (error) {
+    console.error("Error in getCategories:", error);
+    const categories = postCache.map(post => post.category);
+    return [...new Set(categories)];
+  }
 };
 
 // Create a new post
-export const createPost = (post: Omit<BlogPost, "id">) => {
+export const createPost = async (post: Omit<BlogPost, "id">) => {
   try {
-    // Reload from localStorage first to ensure we have latest data
-    mockBlogPosts = loadPosts();
+    console.log("Creating post with data:", post);
     
     // Generate a unique ID
     const newId = Math.random().toString(36).substring(2, 9);
@@ -620,72 +697,182 @@ export const createPost = (post: Omit<BlogPost, "id">) => {
       updatedAt: new Date().toISOString(),
     };
     
-    // Add to the mock database
-    mockBlogPosts.push(newPost);
+    // Send to API
+    const response = await fetch(`${API_URL}/posts`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(newPost),
+    });
     
-    // Persist to localStorage
-    savePosts(mockBlogPosts);
+    if (!response.ok) {
+      throw new Error(`API error: ${response.status}`);
+    }
     
-    console.log("Post created and saved:", newPost);
+    const savedPost = await response.json();
+    console.log("Post created successfully:", savedPost);
     
-    return newPost;
+    // Update cache
+    postCache.push(savedPost);
+    
+    // Update localStorage backup
+    localStorage.setItem('blogPosts', JSON.stringify(postCache));
+    
+    return savedPost;
   } catch (error) {
     console.error("Error creating post:", error);
-    throw new Error("Failed to create post");
+    
+    // Fallback to local creation if API fails
+    try {
+      // Generate a unique ID
+      const newId = Math.random().toString(36).substring(2, 9);
+      
+      // Create new post with generated ID and timestamps
+      const newPost: BlogPost = {
+        ...post,
+        id: newId,
+        publishedAt: post.publishedAt || new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+      
+      // Add to cache
+      postCache.push(newPost);
+      
+      // Update localStorage backup
+      localStorage.setItem('blogPosts', JSON.stringify(postCache));
+      
+      toast.warning("Created post locally. Changes will not sync to other devices until server is available.");
+      return newPost;
+    } catch (localError) {
+      console.error("Error in local post creation:", localError);
+      toast.error("Failed to create post.");
+      throw new Error("Failed to create post");
+    }
   }
 };
 
 // Update a post
-export const updatePost = (id: string, updatedPost: Partial<BlogPost>) => {
+export const updatePost = async (id: string, updatedPost: Partial<BlogPost>) => {
   try {
-    // Reload from localStorage first
-    mockBlogPosts = loadPosts();
+    console.log("Updating post with data:", updatedPost);
     
-    const index = mockBlogPosts.findIndex(post => post.id === id);
+    // First get the current post to merge with updates
+    const currentIndex = postCache.findIndex(post => post.id === id);
     
-    if (index === -1) {
+    if (currentIndex === -1) {
       throw new Error(`Post with id ${id} not found`);
     }
     
-    // Update the post with new data
-    mockBlogPosts[index] = {
-      ...mockBlogPosts[index],
+    const currentPost = postCache[currentIndex];
+    
+    // Merge current post with updates
+    const mergedPost = {
+      ...currentPost,
       ...updatedPost,
       updatedAt: new Date().toISOString(),
     };
     
-    // Persist to localStorage
-    savePosts(mockBlogPosts);
+    // Send to API
+    const response = await fetch(`${API_URL}/posts/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(mergedPost),
+    });
     
-    console.log("Post updated and saved:", mockBlogPosts[index]);
-    return mockBlogPosts[index];
+    if (!response.ok) {
+      throw new Error(`API error: ${response.status}`);
+    }
+    
+    const savedPost = await response.json();
+    console.log("Post updated successfully:", savedPost);
+    
+    // Update cache
+    postCache[currentIndex] = savedPost;
+    
+    // Update localStorage backup
+    localStorage.setItem('blogPosts', JSON.stringify(postCache));
+    
+    return savedPost;
   } catch (error) {
     console.error("Error updating post:", error);
-    throw new Error(`Failed to update post: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    
+    // Fallback to local update if API fails
+    try {
+      const index = postCache.findIndex(post => post.id === id);
+      
+      if (index === -1) {
+        throw new Error(`Post with id ${id} not found`);
+      }
+      
+      // Update the post with new data
+      postCache[index] = {
+        ...postCache[index],
+        ...updatedPost,
+        updatedAt: new Date().toISOString(),
+      };
+      
+      // Update localStorage backup
+      localStorage.setItem('blogPosts', JSON.stringify(postCache));
+      
+      toast.warning("Updated post locally. Changes will not sync to other devices until server is available.");
+      return postCache[index];
+    } catch (localError) {
+      console.error("Error in local post update:", localError);
+      toast.error("Failed to update post.");
+      throw new Error(`Failed to update post: ${localError instanceof Error ? localError.message : 'Unknown error'}`);
+    }
   }
 };
 
 // Delete a post
-export const deletePost = (id: string) => {
+export const deletePost = async (id: string) => {
   try {
-    // Reload from localStorage first
-    mockBlogPosts = loadPosts();
+    // Send to API
+    const response = await fetch(`${API_URL}/posts/${id}`, {
+      method: 'DELETE',
+    });
     
-    const index = mockBlogPosts.findIndex(post => post.id === id);
-    
-    if (index === -1) {
-      throw new Error(`Post with id ${id} not found`);
+    if (!response.ok) {
+      throw new Error(`API error: ${response.status}`);
     }
     
-    mockBlogPosts.splice(index, 1);
+    console.log("Post deleted successfully from API");
     
-    // Persist to localStorage
-    savePosts(mockBlogPosts);
+    // Update cache
+    const index = postCache.findIndex(post => post.id === id);
+    if (index !== -1) {
+      postCache.splice(index, 1);
+      
+      // Update localStorage backup
+      localStorage.setItem('blogPosts', JSON.stringify(postCache));
+    }
     
-    console.log("Post deleted successfully");
     return { success: true };
   } catch (error) {
     console.error("Error deleting post:", error);
-    throw new Error(`Failed to delete post: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    
+    // Fallback to local delete if API fails
+    try {
+      const index = postCache.findIndex(post => post.id === id);
+      
+      if (index === -1) {
+        throw new Error(`Post with id ${id} not found`);
+      }
+      
+      postCache.splice(index, 1);
+      
+      // Update localStorage backup
+      localStorage.setItem('blogPosts', JSON.stringify(postCache));
+      
+      toast.warning("Deleted post locally. Changes will not sync to other devices until server is available.");
+      return { success: true };
+    } catch (localError) {
+      console.error("Error in local post deletion:", localError);
+      toast.error("Failed to delete post.");
+      throw new Error(`Failed to delete post: ${localError instanceof Error ? localError.message : 'Unknown error'}`);
+    }
   }
 };

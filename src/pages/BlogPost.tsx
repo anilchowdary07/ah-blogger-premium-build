@@ -19,7 +19,7 @@ const BlogPost = () => {
       if (slug) {
         setLoading(true);
         try {
-          const fetchedPost = getPostBySlug(slug);
+          const fetchedPost = await getPostBySlug(slug);
           console.log("Fetched post:", fetchedPost);
           setPost(fetchedPost || null);
         } catch (error) {
@@ -68,7 +68,7 @@ const BlogPost = () => {
   return (
     <article className="max-w-4xl mx-auto">
       {/* Admin Actions */}
-      {isAdmin && (
+      {isAdmin && post && (
         <div className="mb-6 flex justify-end">
           <Button 
             variant="outline" 
@@ -82,75 +82,79 @@ const BlogPost = () => {
       )}
 
       {/* Header */}
-      <header className="mb-8">
-        <Link to={`/category/${post.category}`}>
-          <Badge variant="outline" className="mb-4 text-sm font-medium bg-blog-light-purple text-blog-purple hover:bg-blog-purple hover:text-white">
-            {post.category.charAt(0).toUpperCase() + post.category.slice(1)}
-          </Badge>
-        </Link>
+      {post && (
+        <>
+          <header className="mb-8">
+            <Link to={`/category/${post.category}`}>
+              <Badge variant="outline" className="mb-4 text-sm font-medium bg-blog-light-purple text-blog-purple hover:bg-blog-purple hover:text-white">
+                {post.category.charAt(0).toUpperCase() + post.category.slice(1)}
+              </Badge>
+            </Link>
 
-        <h1 className="font-serif font-bold text-3xl md:text-4xl lg:text-5xl text-gray-900 mb-6">
-          {post.title}
-        </h1>
+            <h1 className="font-serif font-bold text-3xl md:text-4xl lg:text-5xl text-gray-900 mb-6">
+              {post.title}
+            </h1>
 
-        {/* Meta */}
-        <div className="flex flex-wrap items-center gap-6 text-gray-600">
-          <div className="flex items-center gap-2">
-            <User size={18} />
-            <span>{post.author}</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <CalendarIcon size={18} />
-            <time dateTime={post.date}>
-              {new Date(post.date).toLocaleDateString("en-US", {
-                year: "numeric",
-                month: "long",
-                day: "numeric",
-              })}
-            </time>
-          </div>
-          <div className="flex items-center gap-2">
-            <Clock size={18} />
-            <span>{post.readingTime} min read</span>
-          </div>
-        </div>
-      </header>
+            {/* Meta */}
+            <div className="flex flex-wrap items-center gap-6 text-gray-600">
+              <div className="flex items-center gap-2">
+                <User size={18} />
+                <span>{post.author}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <CalendarIcon size={18} />
+                <time dateTime={post.date}>
+                  {new Date(post.date).toLocaleDateString("en-US", {
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                  })}
+                </time>
+              </div>
+              <div className="flex items-center gap-2">
+                <Clock size={18} />
+                <span>{post.readingTime} min read</span>
+              </div>
+            </div>
+          </header>
 
-      {/* Featured Image */}
-      {post.coverImage && (
-        <div className="mb-8 rounded-lg overflow-hidden">
-          <img 
-            src={post.coverImage}
-            alt={post.title}
-            className="w-full h-auto object-cover"
-          />
-        </div>
+          {/* Featured Image */}
+          {post.coverImage && (
+            <div className="mb-8 rounded-lg overflow-hidden">
+              <img 
+                src={post.coverImage}
+                alt={post.title}
+                className="w-full h-auto object-cover"
+              />
+            </div>
+          )}
+
+          {/* Content */}
+          <div className="blog-content prose prose-lg max-w-none">
+            {post.content && post.content.startsWith('<') ? (
+              <div dangerouslySetInnerHTML={{ __html: post.content }} />
+            ) : (
+              post.content && post.content.split("\n").map((paragraph, i) => (
+                <p key={i}>{paragraph}</p>
+              ))
+            )}
+          </div>
+
+          {/* Tags */}
+          <div className="mt-10 pt-6 border-t">
+            <div className="flex flex-wrap gap-2">
+              {post.tags && post.tags.map((tag) => (
+                <span 
+                  key={tag}
+                  className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm"
+                >
+                  #{tag}
+                </span>
+              ))}
+            </div>
+          </div>
+        </>
       )}
-
-      {/* Content */}
-      <div className="blog-content prose prose-lg max-w-none">
-        {post.content && post.content.startsWith('<') ? (
-          <div dangerouslySetInnerHTML={{ __html: post.content }} />
-        ) : (
-          post.content && post.content.split("\n").map((paragraph, i) => (
-            <p key={i}>{paragraph}</p>
-          ))
-        )}
-      </div>
-
-      {/* Tags */}
-      <div className="mt-10 pt-6 border-t">
-        <div className="flex flex-wrap gap-2">
-          {post.tags && post.tags.map((tag) => (
-            <span 
-              key={tag}
-              className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm"
-            >
-              #{tag}
-            </span>
-          ))}
-        </div>
-      </div>
     </article>
   );
 };
