@@ -19,8 +19,8 @@ export interface BlogPost {
   updatedAt?: string;
 }
 
-// In-memory storage for blog posts
-let mockBlogPosts: BlogPost[] = [
+// Initial mock blog posts
+const initialBlogPosts: BlogPost[] = [
   {
     id: "1",
     title: "The Future of Artificial Intelligence in Content Creation",
@@ -516,6 +516,28 @@ let mockBlogPosts: BlogPost[] = [
   },
 ];
 
+// Load posts from localStorage or use initial posts if none exist
+const loadPosts = (): BlogPost[] => {
+  const savedPosts = localStorage.getItem('blogPosts');
+  if (savedPosts) {
+    try {
+      return JSON.parse(savedPosts);
+    } catch (error) {
+      console.error('Error parsing saved posts:', error);
+      return [...initialBlogPosts];
+    }
+  }
+  return [...initialBlogPosts];
+};
+
+// Save posts to localStorage
+const savePosts = (posts: BlogPost[]) => {
+  localStorage.setItem('blogPosts', JSON.stringify(posts));
+};
+
+// In-memory storage for blog posts that syncs with localStorage
+let mockBlogPosts: BlogPost[] = loadPosts();
+
 // Get all blog posts
 export const getAllPosts = () => {
   return [...mockBlogPosts];
@@ -570,7 +592,11 @@ export const createPost = (post: Omit<BlogPost, "id">) => {
     
     // Add to the mock database
     mockBlogPosts.push(newPost);
-    console.log("Post created:", newPost);
+    
+    // Persist to localStorage
+    savePosts(mockBlogPosts);
+    
+    console.log("Post created and saved:", newPost);
     
     return newPost;
   } catch (error) {
@@ -595,7 +621,10 @@ export const updatePost = (id: string, updatedPost: Partial<BlogPost>) => {
       updatedAt: new Date().toISOString(),
     };
     
-    console.log("Post updated:", mockBlogPosts[index]);
+    // Persist to localStorage
+    savePosts(mockBlogPosts);
+    
+    console.log("Post updated and saved:", mockBlogPosts[index]);
     return mockBlogPosts[index];
   } catch (error) {
     console.error("Error updating post:", error);
@@ -613,6 +642,10 @@ export const deletePost = (id: string) => {
     }
     
     mockBlogPosts.splice(index, 1);
+    
+    // Persist to localStorage
+    savePosts(mockBlogPosts);
+    
     console.log("Post deleted successfully");
     return { success: true };
   } catch (error) {

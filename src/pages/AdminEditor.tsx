@@ -214,7 +214,7 @@ const AdminEditor = () => {
     const postData = {
       ...values,
       tags,
-      slug: values.slug || values.title.toLowerCase().replace(/\s+/g, "-"),
+      slug: values.slug || values.title.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, ""),
     };
     
     console.log("Form submitted with values:", values);
