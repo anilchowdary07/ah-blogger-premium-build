@@ -20,6 +20,7 @@ const BlogPost = () => {
         setLoading(true);
         try {
           const fetchedPost = getPostBySlug(slug);
+          console.log("Fetched post:", fetchedPost);
           setPost(fetchedPost || null);
         } catch (error) {
           console.error("Error fetching post:", error);
@@ -128,10 +129,10 @@ const BlogPost = () => {
 
       {/* Content */}
       <div className="blog-content prose prose-lg max-w-none">
-        {post.content.startsWith('<') ? (
+        {post.content && post.content.startsWith('<') ? (
           <div dangerouslySetInnerHTML={{ __html: post.content }} />
         ) : (
-          post.content.split("\n").map((paragraph, i) => (
+          post.content && post.content.split("\n").map((paragraph, i) => (
             <p key={i}>{paragraph}</p>
           ))
         )}
