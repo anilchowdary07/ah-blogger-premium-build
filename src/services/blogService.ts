@@ -1,3 +1,4 @@
+
 // This is a mock service that would normally connect to a backend API
 // In a real application, this would make API calls to your server
 
@@ -518,21 +519,31 @@ const initialBlogPosts: BlogPost[] = [
 
 // Load posts from localStorage or use initial posts if none exist
 const loadPosts = (): BlogPost[] => {
-  const savedPosts = localStorage.getItem('blogPosts');
-  if (savedPosts) {
-    try {
-      return JSON.parse(savedPosts);
-    } catch (error) {
-      console.error('Error parsing saved posts:', error);
-      return [...initialBlogPosts];
+  try {
+    const savedPosts = localStorage.getItem('blogPosts');
+    if (savedPosts) {
+      const parsedPosts = JSON.parse(savedPosts);
+      console.log("Loaded posts from localStorage:", parsedPosts.length);
+      return parsedPosts;
     }
+  } catch (error) {
+    console.error('Error parsing saved posts:', error);
   }
+  
+  console.log("Using initial blog posts");
+  // If localStorage is empty or fails, initialize with default posts and save them
+  localStorage.setItem('blogPosts', JSON.stringify(initialBlogPosts));
   return [...initialBlogPosts];
 };
 
 // Save posts to localStorage
 const savePosts = (posts: BlogPost[]) => {
-  localStorage.setItem('blogPosts', JSON.stringify(posts));
+  try {
+    localStorage.setItem('blogPosts', JSON.stringify(posts));
+    console.log("Saved posts to localStorage:", posts.length);
+  } catch (error) {
+    console.error("Error saving posts to localStorage:", error);
+  }
 };
 
 // In-memory storage for blog posts that syncs with localStorage
@@ -540,26 +551,40 @@ let mockBlogPosts: BlogPost[] = loadPosts();
 
 // Get all blog posts
 export const getAllPosts = () => {
+  // Reload from localStorage to ensure we have the latest
+  mockBlogPosts = loadPosts();
   return [...mockBlogPosts];
 };
 
 // Get featured posts
 export const getFeaturedPosts = () => {
+  // Reload from localStorage
+  mockBlogPosts = loadPosts();
   return mockBlogPosts.filter(post => post.featured);
 };
 
 // Get post by slug
 export const getPostBySlug = (slug: string) => {
-  return mockBlogPosts.find(post => post.slug === slug);
+  // Reload from localStorage
+  mockBlogPosts = loadPosts();
+  console.log(`Looking for post with slug: ${slug}`);
+  console.log(`Found ${mockBlogPosts.length} posts in total`);
+  const post = mockBlogPosts.find(post => post.slug === slug);
+  console.log("Found post:", post ? post.title : "Not found");
+  return post;
 };
 
 // Get posts by category
 export const getPostsByCategory = (category: string) => {
+  // Reload from localStorage
+  mockBlogPosts = loadPosts();
   return mockBlogPosts.filter(post => post.category === category);
 };
 
 // Search posts
 export const searchPosts = (query: string) => {
+  // Reload from localStorage
+  mockBlogPosts = loadPosts();
   const lowercaseQuery = query.toLowerCase();
   return mockBlogPosts.filter(post => 
     post.title.toLowerCase().includes(lowercaseQuery) || 
@@ -572,6 +597,8 @@ export const searchPosts = (query: string) => {
 
 // Get all categories
 export const getCategories = () => {
+  // Reload from localStorage
+  mockBlogPosts = loadPosts();
   const categories = mockBlogPosts.map(post => post.category);
   return [...new Set(categories)];
 };
@@ -579,6 +606,9 @@ export const getCategories = () => {
 // Create a new post
 export const createPost = (post: Omit<BlogPost, "id">) => {
   try {
+    // Reload from localStorage first to ensure we have latest data
+    mockBlogPosts = loadPosts();
+    
     // Generate a unique ID
     const newId = Math.random().toString(36).substring(2, 9);
     
@@ -608,6 +638,9 @@ export const createPost = (post: Omit<BlogPost, "id">) => {
 // Update a post
 export const updatePost = (id: string, updatedPost: Partial<BlogPost>) => {
   try {
+    // Reload from localStorage first
+    mockBlogPosts = loadPosts();
+    
     const index = mockBlogPosts.findIndex(post => post.id === id);
     
     if (index === -1) {
@@ -635,6 +668,9 @@ export const updatePost = (id: string, updatedPost: Partial<BlogPost>) => {
 // Delete a post
 export const deletePost = (id: string) => {
   try {
+    // Reload from localStorage first
+    mockBlogPosts = loadPosts();
+    
     const index = mockBlogPosts.findIndex(post => post.id === id);
     
     if (index === -1) {

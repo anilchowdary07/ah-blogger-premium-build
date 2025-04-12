@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { CalendarIcon, Clock, Edit, User } from "lucide-react";
@@ -14,14 +15,23 @@ const BlogPost = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (slug) {
-      const fetchedPost = getPostBySlug(slug);
-      setPost(fetchedPost || null);
-      setLoading(false);
+    const fetchPost = async () => {
+      if (slug) {
+        setLoading(true);
+        try {
+          const fetchedPost = getPostBySlug(slug);
+          setPost(fetchedPost || null);
+        } catch (error) {
+          console.error("Error fetching post:", error);
+        } finally {
+          setLoading(false);
+        }
+      }
+    };
 
-      // Scroll to top when post changes
-      window.scrollTo(0, 0);
-    }
+    fetchPost();
+    // Scroll to top when post changes
+    window.scrollTo(0, 0);
   }, [slug]);
 
   if (loading) {
@@ -106,24 +116,31 @@ const BlogPost = () => {
       </header>
 
       {/* Featured Image */}
-      <div className="mb-8 rounded-lg overflow-hidden">
-        <img 
-          src={`${post.coverImage}?w=1200&auto=format&q=75`}
-          alt={post.title}
-          className="w-full h-auto object-cover"
-        />
-      </div>
+      {post.coverImage && (
+        <div className="mb-8 rounded-lg overflow-hidden">
+          <img 
+            src={post.coverImage}
+            alt={post.title}
+            className="w-full h-auto object-cover"
+          />
+        </div>
+      )}
 
       {/* Content */}
-      <div 
-        className="blog-content prose prose-lg max-w-none"
-        dangerouslySetInnerHTML={{ __html: post.content }}
-      />
+      <div className="blog-content prose prose-lg max-w-none">
+        {post.content.startsWith('<') ? (
+          <div dangerouslySetInnerHTML={{ __html: post.content }} />
+        ) : (
+          post.content.split("\n").map((paragraph, i) => (
+            <p key={i}>{paragraph}</p>
+          ))
+        )}
+      </div>
 
       {/* Tags */}
       <div className="mt-10 pt-6 border-t">
         <div className="flex flex-wrap gap-2">
-          {post.tags.map((tag) => (
+          {post.tags && post.tags.map((tag) => (
             <span 
               key={tag}
               className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm"
