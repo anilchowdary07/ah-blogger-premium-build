@@ -1,4 +1,3 @@
-
 // This is a mock service that would normally connect to a backend API
 // In a real application, this would make API calls to your server
 
@@ -8,17 +7,20 @@ export interface BlogPost {
   slug: string;
   excerpt: string;
   content: string;
-  coverImage: string;
+  coverImage?: string;
   author: string;
   date: string;
   category: string;
   tags: string[];
   readingTime: number;
   featured: boolean;
+  published?: boolean;
+  publishedAt?: string;
+  updatedAt?: string;
 }
 
-// Mock data for blog posts
-const mockBlogPosts: BlogPost[] = [
+// In-memory storage for blog posts
+let mockBlogPosts: BlogPost[] = [
   {
     id: "1",
     title: "The Future of Artificial Intelligence in Content Creation",
@@ -72,6 +74,9 @@ const mockBlogPosts: BlogPost[] = [
     tags: ["artificial intelligence", "content creation", "digital media"],
     readingTime: 6,
     featured: true,
+    published: true,
+    publishedAt: "2024-04-05T10:30:00Z",
+    updatedAt: "2024-04-05T10:30:00Z",
   },
   {
     id: "2",
@@ -513,7 +518,7 @@ const mockBlogPosts: BlogPost[] = [
 
 // Get all blog posts
 export const getAllPosts = () => {
-  return mockBlogPosts;
+  return [...mockBlogPosts];
 };
 
 // Get featured posts
@@ -551,37 +556,67 @@ export const getCategories = () => {
 
 // Create a new post
 export const createPost = (post: Omit<BlogPost, "id">) => {
-  const newPost = {
-    ...post,
-    id: (mockBlogPosts.length + 1).toString(),
-  };
-  mockBlogPosts.push(newPost);
-  return newPost;
+  try {
+    // Generate a unique ID
+    const newId = Math.random().toString(36).substring(2, 9);
+    
+    // Create new post with generated ID and timestamps
+    const newPost: BlogPost = {
+      ...post,
+      id: newId,
+      publishedAt: post.publishedAt || new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    
+    // Add to the mock database
+    mockBlogPosts.push(newPost);
+    console.log("Post created:", newPost);
+    
+    return newPost;
+  } catch (error) {
+    console.error("Error creating post:", error);
+    throw new Error("Failed to create post");
+  }
 };
 
 // Update a post
 export const updatePost = (id: string, updatedPost: Partial<BlogPost>) => {
-  const index = mockBlogPosts.findIndex(post => post.id === id);
-  
-  if (index === -1) {
-    throw new Error(`Post with id ${id} not found`);
+  try {
+    const index = mockBlogPosts.findIndex(post => post.id === id);
+    
+    if (index === -1) {
+      throw new Error(`Post with id ${id} not found`);
+    }
+    
+    // Update the post with new data
+    mockBlogPosts[index] = {
+      ...mockBlogPosts[index],
+      ...updatedPost,
+      updatedAt: new Date().toISOString(),
+    };
+    
+    console.log("Post updated:", mockBlogPosts[index]);
+    return mockBlogPosts[index];
+  } catch (error) {
+    console.error("Error updating post:", error);
+    throw new Error(`Failed to update post: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
-  
-  mockBlogPosts[index] = {
-    ...mockBlogPosts[index],
-    ...updatedPost,
-  };
-  
-  return mockBlogPosts[index];
 };
 
 // Delete a post
 export const deletePost = (id: string) => {
-  const index = mockBlogPosts.findIndex(post => post.id === id);
-  
-  if (index === -1) {
-    throw new Error(`Post with id ${id} not found`);
+  try {
+    const index = mockBlogPosts.findIndex(post => post.id === id);
+    
+    if (index === -1) {
+      throw new Error(`Post with id ${id} not found`);
+    }
+    
+    mockBlogPosts.splice(index, 1);
+    console.log("Post deleted successfully");
+    return { success: true };
+  } catch (error) {
+    console.error("Error deleting post:", error);
+    throw new Error(`Failed to delete post: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
-  
-  mockBlogPosts.splice(index, 1);
 };

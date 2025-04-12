@@ -40,85 +40,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-
-const fetchPost = async (slug: string) => {
-  try {
-    await new Promise((resolve) => setTimeout(resolve, 800));
-    
-    const post = {
-      id: "1",
-      title: "How to Build a Blog with React",
-      slug: "how-to-build-blog-react",
-      content: "This is a comprehensive guide to building a blog with React...",
-      excerpt: "Learn the fundamentals of creating a blog with React and modern tools",
-      category: "technology",
-      tags: ["react", "javascript", "web development"],
-      featured: true,
-      published: true,
-      publishedAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      coverImage: "https://images.unsplash.com/photo-1587620962725-abab7fe55159",
-    };
-    
-    console.log("Fetched post:", post);
-    return post;
-  } catch (error) {
-    console.error("Error fetching post:", error);
-    throw error;
-  }
-};
-
-const createPost = async (postData: any) => {
-  try {
-    console.log("Creating post with data:", postData);
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    
-    const newPost = {
-      ...postData,
-      id: Math.random().toString(36).substring(2, 9),
-      slug: postData.slug || postData.title.toLowerCase().replace(/\s+/g, "-"),
-      publishedAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-    
-    console.log("Created post:", newPost);
-    return newPost;
-  } catch (error) {
-    console.error("Error creating post:", error);
-    throw error;
-  }
-};
-
-const updatePost = async (postData: any) => {
-  try {
-    console.log("Updating post with data:", postData);
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    
-    const updatedPost = {
-      ...postData,
-      updatedAt: new Date().toISOString(),
-    };
-    
-    console.log("Updated post:", updatedPost);
-    return updatedPost;
-  } catch (error) {
-    console.error("Error updating post:", error);
-    throw error;
-  }
-};
-
-const deletePost = async (id: string) => {
-  try {
-    console.log("Deleting post with ID:", id);
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    
-    console.log("Post deleted successfully");
-    return { success: true };
-  } catch (error) {
-    console.error("Error deleting post:", error);
-    throw error;
-  }
-};
+import { createPost, updatePost, deletePost, getPostBySlug } from "@/services/blogService";
 
 const postFormSchema = z.object({
   title: z.string().min(5, "Title must be at least 5 characters"),
@@ -145,9 +67,22 @@ const AdminEditor = () => {
   const [previewMode, setPreviewMode] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   
+  const fetchPost = useCallback(async () => {
+    if (!slug) return null;
+    
+    try {
+      const post = await getPostBySlug(slug);
+      console.log("Fetched post:", post);
+      return post || null;
+    } catch (error) {
+      console.error("Error fetching post:", error);
+      throw error;
+    }
+  }, [slug]);
+  
   const { data: post, isLoading: isLoadingPost } = useQuery({
     queryKey: ["post", slug],
-    queryFn: () => fetchPost(slug as string),
+    queryFn: fetchPost,
     enabled: isEditMode,
     staleTime: Infinity,
     retry: 2,
@@ -184,16 +119,26 @@ const AdminEditor = () => {
         excerpt: post.excerpt,
         category: post.category,
         tags: post.tags,
-        coverImage: post.coverImage,
-        featured: post.featured,
-        published: post.published,
+        coverImage: post.coverImage || "",
+        featured: post.featured || false,
+        published: post.published || false,
       });
       setTags(post.tags || []);
     }
   }, [post, form]);
   
   const createMutation = useMutation({
-    mutationFn: createPost,
+    mutationFn: async (postData: any) => {
+      console.log("Creating post with data:", postData);
+      try {
+        const result = await createPost(postData);
+        console.log("Create post result:", result);
+        return result;
+      } catch (error) {
+        console.error("Error in create mutation:", error);
+        throw error;
+      }
+    },
     onMutate: () => {
       setIsSaving(true);
       console.log("Starting create mutation");
@@ -214,7 +159,17 @@ const AdminEditor = () => {
   });
   
   const updateMutation = useMutation({
-    mutationFn: updatePost,
+    mutationFn: async (postData: any) => {
+      console.log("Updating post with data:", postData);
+      try {
+        const result = await updatePost(postData.id, postData);
+        console.log("Update post result:", result);
+        return result;
+      } catch (error) {
+        console.error("Error in update mutation:", error);
+        throw error;
+      }
+    },
     onMutate: () => {
       setIsSaving(true);
       console.log("Starting update mutation");
@@ -235,7 +190,15 @@ const AdminEditor = () => {
   });
   
   const deleteMutation = useMutation({
-    mutationFn: deletePost,
+    mutationFn: async (id: string) => {
+      try {
+        await deletePost(id);
+        return { success: true };
+      } catch (error) {
+        console.error("Error in delete mutation:", error);
+        throw error;
+      }
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["posts"] });
       toast.success("Post deleted successfully!");
@@ -262,7 +225,13 @@ const AdminEditor = () => {
       updateMutation.mutate({ ...post, ...postData });
     } else {
       console.log("Creating new post");
-      createMutation.mutate(postData);
+      const newPost = {
+        ...postData,
+        author: "Admin User",
+        date: new Date().toISOString().split('T')[0],
+        readingTime: Math.ceil(postData.content.length / 1000),
+      };
+      createMutation.mutate(newPost);
     }
   };
   
@@ -501,6 +470,7 @@ const AdminEditor = () => {
                           <Select
                             onValueChange={field.onChange}
                             defaultValue={field.value}
+                            value={field.value}
                           >
                             <FormControl>
                               <SelectTrigger>
