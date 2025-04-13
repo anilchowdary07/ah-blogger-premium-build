@@ -8,19 +8,48 @@ interface User {
   isAdmin: boolean;
 }
 
+interface AdminCredentials {
+  email: string;
+  password: string;
+  name: string;
+}
+
 interface AuthContextType {
   user: User | null;
   login: (email: string, password: string) => Promise<boolean>;
   logout: () => void;
   isAuthenticated: boolean;
   isAdmin: boolean;
+  updateAdminCredentials: (credentials: AdminCredentials) => void;
+  getAdminEmail: () => string;
 }
+
+const DEFAULT_ADMIN = {
+  email: "admin@example.com",
+  password: "password123",
+  name: "Admin User"
+};
+
+const ADMIN_STORAGE_KEY = "ah-blogger-admin-credentials";
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [adminCredentials, setAdminCredentials] = useState<AdminCredentials>(() => {
+    // Load admin credentials from localStorage or use defaults
+    const saved = localStorage.getItem(ADMIN_STORAGE_KEY);
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (error) {
+        console.error("Failed to parse stored admin credentials:", error);
+        return DEFAULT_ADMIN;
+      }
+    }
+    return DEFAULT_ADMIN;
+  });
 
   useEffect(() => {
     // Check if user is already logged in using localStorage
@@ -36,12 +65,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsLoading(false);
   }, []);
 
+  const updateAdminCredentials = (credentials: AdminCredentials) => {
+    setAdminCredentials(credentials);
+    localStorage.setItem(ADMIN_STORAGE_KEY, JSON.stringify(credentials));
+    toast.success("Admin credentials updated successfully!");
+  };
+
+  const getAdminEmail = () => {
+    return adminCredentials.email;
+  };
+
   const login = async (email: string, password: string): Promise<boolean> => {
-    // In a real app, you'd validate against a backend
-    // For demo, we'll use hardcoded admin credentials
-    if (email === "admin@example.com" && password === "password123") {
+    // Validate against stored admin credentials
+    if (email === adminCredentials.email && password === adminCredentials.password) {
       const userData: User = {
-        name: "Admin User",
+        name: adminCredentials.name,
         email: email,
         isAdmin: true,
       };
@@ -68,6 +106,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     logout,
     isAuthenticated: !!user,
     isAdmin: user?.isAdmin || false,
+    updateAdminCredentials,
+    getAdminEmail,
   };
 
   if (isLoading) {
