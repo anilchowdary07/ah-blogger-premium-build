@@ -1,242 +1,114 @@
 
-import React, { useEffect } from "react";
 import { motion } from "framer-motion";
-import { Shield, Lock, FileText } from "lucide-react";
-import { toast } from "sonner";
 
 const PrivacyPolicy = () => {
-  useEffect(() => {
-    // Notify user when the page loads
-    toast.info("Privacy is important to us!", {
-      description: "Last updated April 11, 2025",
-      duration: 5000,
-    });
-  }, []);
-
   // Animation variants for staggered animations
-  const containerVariants = {
+  const container = {
     hidden: { opacity: 0 },
-    visible: {
+    show: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.2,
-        delayChildren: 0.3,
-      },
-    },
+        staggerChildren: 0.1
+      }
+    }
   };
 
-  const itemVariants = {
+  const item = {
     hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.5 } },
-  };
-
-  const iconContainerVariants = {
-    hover: { scale: 1.1, rotate: 5, transition: { duration: 0.3 } },
+    show: { opacity: 1, y: 0 }
   };
 
   return (
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      transition={{ duration: 0.7 }}
-      className="max-w-4xl mx-auto py-8"
+      exit={{ opacity: 0 }}
+      className="max-w-3xl mx-auto py-8"
     >
-      <motion.div 
-        initial={{ y: -50, opacity: 0 }} 
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.6, type: "spring", stiffness: 100 }}
-        className="flex items-center justify-center mb-10"
+      <motion.h1 
+        className="text-4xl font-serif font-bold mb-8 bg-gradient-to-r from-blog-purple to-blog-dark-purple bg-clip-text text-transparent"
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
       >
-        <motion.div
-          whileHover={{ scale: 1.05, rotate: 5 }}
-          className="bg-blog-light-purple dark:bg-gray-800 p-4 rounded-full mr-4"
-        >
-          <Shield className="h-8 w-8 text-blog-purple" />
-        </motion.div>
-        <div>
-          <motion.h1 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.3 }}
-            className="font-serif font-bold text-3xl md:text-4xl lg:text-5xl mb-2 bg-gradient-to-r from-blog-purple to-blog-dark-purple text-transparent bg-clip-text"
-          >
-            Privacy Policy
-          </motion.h1>
-          <motion.p 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.5 }}
-            className="text-lg text-gray-700 dark:text-gray-300"
-          >
-            Last Updated: April 11, 2025
-          </motion.p>
-        </div>
-      </motion.div>
+        Privacy Policy
+      </motion.h1>
 
-      <motion.div 
-        variants={containerVariants}
+      <motion.div
+        variants={container}
         initial="hidden"
-        animate="visible"
-        className="prose dark:prose-invert max-w-none"
+        animate="show"
+        className="space-y-6 text-gray-700 dark:text-gray-300"
       >
-        <motion.div variants={itemVariants} className="mb-8">
-          <div className="flex items-center">
-            <motion.div 
-              variants={iconContainerVariants} 
-              whileHover="hover"
-              className="mr-4 flex-shrink-0 text-blog-purple"
-            >
-              <FileText size={24} />
-            </motion.div>
-            <h2 className="text-2xl font-serif">Introduction</h2>
-          </div>
+        <motion.div variants={item} className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm">
+          <h2 className="text-2xl font-medium mb-4">Introduction</h2>
+          <p className="mb-4">
+            Welcome to our Privacy Policy. Your privacy is critically important to us. This Privacy Policy document outlines the types of personal information that is received and collected and how it is used.
+          </p>
           <p>
-            Welcome to our blog. We respect your privacy and are committed to protecting your personal data.
-            This privacy policy will inform you about how we look after your personal data when you visit our website
-            and tell you about your privacy rights and how the law protects you.
+            We use your data to provide and improve our services. By using our website, you agree to the collection and use of information in accordance with this policy.
           </p>
         </motion.div>
 
-        <motion.div variants={itemVariants} className="mb-8">
-          <h2>The Data We Collect About You</h2>
-          <p>
-            Personal data, or personal information, means any information about an individual from which that person can be identified.
-            It does not include data where the identity has been removed (anonymous data).
+        <motion.div variants={item} className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm">
+          <h2 className="text-2xl font-medium mb-4">Information Collection And Use</h2>
+          <p className="mb-4">
+            We collect several different types of information for various purposes to provide and improve our service to you.
           </p>
-          <motion.div 
-            initial={{ x: -20, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            transition={{ delay: 0.7, duration: 0.5 }}
-            className="bg-blog-light-purple dark:bg-gray-800 p-6 rounded-lg my-6"
-          >
-            <p className="mb-3">We may collect, use, store and transfer different kinds of personal data about you which we have grouped together as follows:</p>
-            <ul className="space-y-2">
-              <motion.li 
-                whileHover={{ x: 5 }}
-                className="flex items-center"
-              >
-                <span className="h-2 w-2 rounded-full bg-blog-purple mr-2"></span>
-                <strong>Identity Data</strong> includes first name, last name, username or similar identifier.
-              </motion.li>
-              <motion.li 
-                whileHover={{ x: 5 }}
-                className="flex items-center"
-              >
-                <span className="h-2 w-2 rounded-full bg-blog-purple mr-2"></span>
-                <strong>Contact Data</strong> includes email address and telephone numbers.
-              </motion.li>
-              <motion.li 
-                whileHover={{ x: 5 }}
-                className="flex items-center"
-              >
-                <span className="h-2 w-2 rounded-full bg-blog-purple mr-2"></span>
-                <strong>Technical Data</strong> includes internet protocol (IP) address, browser type and version, time zone setting.
-              </motion.li>
-              <motion.li 
-                whileHover={{ x: 5 }}
-                className="flex items-center"
-              >
-                <span className="h-2 w-2 rounded-full bg-blog-purple mr-2"></span>
-                <strong>Usage Data</strong> includes information about how you use our website, products and services.
-              </motion.li>
-            </ul>
-          </motion.div>
-        </motion.div>
-
-        <motion.div variants={itemVariants}>
-          <h2>How We Collect Your Personal Data</h2>
-          <p>We use different methods to collect data from and about you including through:</p>
-          <ul>
-            <li><strong>Direct interactions.</strong> You may give us your Identity and Contact Data by filling in forms or by corresponding with us by post, phone, email or otherwise.</li>
-            <li><strong>Automated technologies or interactions.</strong> As you interact with our website, we may automatically collect Technical Data about your equipment, browsing actions and patterns.</li>
-            <li><strong>Third parties or publicly available sources.</strong> We may receive personal data about you from various third parties and public sources as set out below Technical Data from analytics providers such as Google based outside the EU.</li>
+          <h3 className="text-xl font-medium mb-2">Types of Data Collected</h3>
+          <h4 className="text-lg font-medium mb-1">Personal Data</h4>
+          <p>
+            While using our website, we may ask you to provide us with certain personally identifiable information that can be used to contact or identify you ("Personal Data"). This may include, but is not limited to:
+          </p>
+          <ul className="list-disc ml-6 my-3">
+            <li>Email address</li>
+            <li>First name and last name</li>
+            <li>Cookies and Usage Data</li>
           </ul>
         </motion.div>
 
-        <motion.div variants={itemVariants}>
-          <h2>How We Use Your Personal Data</h2>
-          <p>We will only use your personal data when the law allows us to. Most commonly, we will use your personal data in the following circumstances:</p>
-          <ul>
-            <li>Where we need to perform the contract we are about to enter into or have entered into with you.</li>
-            <li>Where it is necessary for our legitimate interests (or those of a third party) and your interests and fundamental rights do not override those interests.</li>
-            <li>Where we need to comply with a legal obligation.</li>
-          </ul>
-        </motion.div>
-
-        <motion.div 
-          variants={itemVariants}
-          className="bg-gray-50 dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700 my-8"
-        >
-          <div className="flex items-center mb-4">
-            <motion.div whileHover={{ rotate: 15 }} className="mr-3 text-blog-purple">
-              <Lock size={24} />
-            </motion.div>
-            <h2 className="m-0">Data Security</h2>
-          </div>
-          <p>
-            We have put in place appropriate security measures to prevent your personal data from being accidentally lost, used or accessed in an unauthorized way, altered or disclosed. In addition, we limit access to your personal data to those employees, agents, contractors and other third parties who have a business need to know. They will only process your personal data on our instructions and they are subject to a duty of confidentiality.
-          </p>
-          <p>
-            We have put in place procedures to deal with any suspected personal data breach and will notify you and any applicable regulator of a breach where we are legally required to do so.
+        <motion.div variants={item} className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm">
+          <h2 className="text-2xl font-medium mb-4">Usage Data</h2>
+          <p className="mb-4">
+            We may also collect information on how the website is accessed and used ("Usage Data"). This Usage Data may include information such as your computer's Internet Protocol address (e.g. IP address), browser type, browser version, the pages of our website that you visit, the time and date of your visit, the time spent on those pages, unique device identifiers and other diagnostic data.
           </p>
         </motion.div>
 
-        <motion.div variants={itemVariants}>
-          <h2>Your Legal Rights</h2>
-          <p>Under certain circumstances, you have rights under data protection laws in relation to your personal data. You have the right to:</p>
-          <motion.div 
-            className="grid grid-cols-1 md:grid-cols-2 gap-4 my-6"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 1, duration: 0.8 }}
-          >
-            <motion.div 
-              whileHover={{ y: -5, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
-              className="p-4 rounded-lg bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700"
-            >
-              <strong>Request access</strong> to your personal data.
-            </motion.div>
-            <motion.div 
-              whileHover={{ y: -5, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
-              className="p-4 rounded-lg bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700"
-            >
-              <strong>Request correction</strong> of your personal data.
-            </motion.div>
-            <motion.div 
-              whileHover={{ y: -5, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
-              className="p-4 rounded-lg bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700"
-            >
-              <strong>Request erasure</strong> of your personal data.
-            </motion.div>
-            <motion.div 
-              whileHover={{ y: -5, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
-              className="p-4 rounded-lg bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700"
-            >
-              <strong>Object to processing</strong> of your personal data.
-            </motion.div>
-          </motion.div>
+        <motion.div variants={item} className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm">
+          <h2 className="text-2xl font-medium mb-4">Tracking & Cookies Data</h2>
+          <p className="mb-4">
+            We use cookies and similar tracking technologies to track the activity on our website and hold certain information.
+          </p>
+          <p className="mb-4">
+            Cookies are files with small amount of data which may include an anonymous unique identifier. Cookies are sent to your browser from a website and stored on your device. Tracking technologies also used are beacons, tags, and scripts to collect and track information and to improve and analyze our website.
+          </p>
+          <p>
+            You can instruct your browser to refuse all cookies or to indicate when a cookie is being sent. However, if you do not accept cookies, you may not be able to use some portions of our website.
+          </p>
         </motion.div>
 
-        <motion.div 
-          variants={itemVariants}
-          className="mt-12 border-t border-gray-200 dark:border-gray-700 pt-8"
-        >
-          <h2>Contact Us</h2>
-          <motion.p
-            whileHover={{ color: "#9b87f5" }}
-            transition={{ duration: 0.3 }}
-          >
-            If you have any questions about this privacy policy or our privacy practices, please contact us using the details set out below.
-          </motion.p>
-          <motion.div 
-            whileHover={{ scale: 1.01 }}
-            className="mt-4 p-5 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700"
-          >
-            <p>
-              Email address: <a href="mailto:privacy@yourblog.com" className="text-blog-purple">privacy@yourblog.com</a><br />
-              Postal address: 123 Blog Street, San Francisco, CA 94107
-            </p>
-          </motion.div>
+        <motion.div variants={item} className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm">
+          <h2 className="text-2xl font-medium mb-4">Security</h2>
+          <p>
+            The security of your data is important to us, but remember that no method of transmission over the Internet, or method of electronic storage is 100% secure. While we strive to use commercially acceptable means to protect your Personal Data, we cannot guarantee its absolute security.
+          </p>
+        </motion.div>
+
+        <motion.div variants={item} className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm">
+          <h2 className="text-2xl font-medium mb-4">Changes To This Privacy Policy</h2>
+          <p className="mb-4">
+            We may update our Privacy Policy from time to time. We will notify you of any changes by posting the new Privacy Policy on this page.
+          </p>
+          <p>
+            You are advised to review this Privacy Policy periodically for any changes. Changes to this Privacy Policy are effective when they are posted on this page.
+          </p>
+        </motion.div>
+
+        <motion.div variants={item} className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm">
+          <h2 className="text-2xl font-medium mb-4">Contact Us</h2>
+          <p>
+            If you have any questions about this Privacy Policy, please contact us through our contact page.
+          </p>
         </motion.div>
       </motion.div>
     </motion.div>

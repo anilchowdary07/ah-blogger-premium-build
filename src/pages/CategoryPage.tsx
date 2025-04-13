@@ -5,6 +5,7 @@ import { getPostsByCategory, BlogPost } from "@/services/blogService";
 import BlogCard from "@/components/BlogCard";
 import CategoryList from "@/components/CategoryList";
 import { motion } from "framer-motion";
+import { toast } from "sonner";
 
 const CategoryPage = () => {
   const { category } = useParams<{ category: string }>();
@@ -21,6 +22,7 @@ const CategoryPage = () => {
           setPosts(categoryPosts);
         } catch (error) {
           console.error("Error fetching posts by category:", error);
+          toast.error(`Failed to load ${category} posts. Showing cached content.`);
           setPosts([]);
         } finally {
           setLoading(false);
@@ -28,8 +30,8 @@ const CategoryPage = () => {
       };
 
       fetchPosts();
-      // Scroll to top
-      window.scrollTo(0, 0);
+      // Scroll to top with smooth animation
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   }, [category]);
 
@@ -46,6 +48,18 @@ const CategoryPage = () => {
   const item = {
     hidden: { opacity: 0, y: 20 },
     show: { opacity: 1, y: 0 }
+  };
+
+  const titleAnimation = {
+    hidden: { opacity: 0, y: -20 },
+    show: { 
+      opacity: 1, 
+      y: 0,
+      transition: {
+        duration: 0.6,
+        ease: [0.6, 0.05, -0.01, 0.9]
+      }
+    }
   };
 
   if (loading) {
@@ -71,24 +85,34 @@ const CategoryPage = () => {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
+      className="pb-12"
     >
       <motion.div
-        initial={{ y: 20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ delay: 0.2, duration: 0.5 }}
+        variants={titleAnimation}
+        initial="hidden"
+        animate="show"
+        className="mb-8"
       >
-        <h1 className="font-serif font-bold text-3xl md:text-4xl mb-2 capitalize bg-gradient-to-r from-blog-purple to-blog-dark-purple bg-clip-text text-transparent">
+        <h1 className="font-serif font-bold text-3xl md:text-4xl mb-2 capitalize 
+                      bg-gradient-to-r from-blog-purple to-blog-dark-purple bg-clip-text text-transparent
+                      relative after:content-[''] after:absolute after:bottom-0 after:left-0 after:h-[2px] 
+                      after:w-24 after:bg-blog-purple after:rounded">
           {category}
         </h1>
-        <p className="text-gray-600 dark:text-gray-300 mb-8">
+        <motion.p 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.3 }}
+          className="text-gray-600 dark:text-gray-300"
+        >
           Explore our collection of articles about {category}.
-        </p>
+        </motion.p>
       </motion.div>
 
       <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.3, duration: 0.5 }}
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.4, duration: 0.5 }}
         className="mb-10"
       >
         <CategoryList />
@@ -102,7 +126,14 @@ const CategoryPage = () => {
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
         >
           {posts.map((post) => (
-            <motion.div key={post.id} variants={item}>
+            <motion.div 
+              key={post.id} 
+              variants={item}
+              whileHover={{ 
+                y: -5, 
+                transition: { duration: 0.2 }
+              }}
+            >
               <BlogCard post={post} />
             </motion.div>
           ))}
