@@ -1,9 +1,8 @@
-
-// Blog service that connects to JSON Server API
+// Blog service that connects to SQLite database via Netlify Functions
 import { toast } from "sonner";
 
-// Update API URL to use relative path which will work in both development and production
-const API_URL = "/api";
+// Use relative API URL for both development and production
+const API_URL = "/.netlify/functions/server";
 
 export interface BlogPost {
   id: string;
@@ -140,6 +139,9 @@ const initialBlogPosts: BlogPost[] = [
     tags: ["quantum computing", "technology", "physics"],
     readingTime: 8,
     featured: false,
+    published: true,
+    publishedAt: "2024-04-02T10:30:00Z",
+    updatedAt: "2024-04-02T10:30:00Z",
   },
   {
     id: "3",
@@ -587,8 +589,9 @@ export const getAllPosts = async () => {
 // Get featured posts
 export const getFeaturedPosts = async () => {
   try {
-    const posts = await loadPosts();
-    return posts.filter(post => post.featured);
+    const response = await fetch(`${API_URL}/posts?featured=true`);
+    if (!response.ok) throw new Error(`API error: ${response.status}`);
+    return await response.json();
   } catch (error) {
     console.error("Error in getFeaturedPosts:", error);
     return postCache.filter(post => post.featured);
@@ -641,7 +644,7 @@ export const getPostsByCategory = async (category: string) => {
 // Search posts
 export const searchPosts = async (query: string) => {
   try {
-    // For full text search, we'll need to fetch all posts and filter
+    // For full text search, we'll need to fetch all posts and filter client-side
     const posts = await loadPosts();
     const lowercaseQuery = query.toLowerCase();
     
@@ -685,13 +688,9 @@ export const createPost = async (post: Omit<BlogPost, "id">) => {
   try {
     console.log("Creating post with data:", post);
     
-    // Generate a unique ID
-    const newId = Math.random().toString(36).substring(2, 9);
-    
-    // Create new post with generated ID and timestamps
-    const newPost: BlogPost = {
+    // Create new post with timestamps
+    const newPost = {
       ...post,
-      id: newId,
       publishedAt: post.publishedAt || new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
@@ -716,121 +715,3 @@ export const createPost = async (post: Omit<BlogPost, "id">) => {
     postCache.push(savedPost);
     
     // Update localStorage backup
-    localStorage.setItem('blogPosts', JSON.stringify(postCache));
-    
-    return savedPost;
-  } catch (error) {
-    console.error("Error creating post:", error);
-    // Also save to local storage even on API failure
-    try {
-      const newPost: BlogPost = {
-        ...post,
-        id: Math.random().toString(36).substring(2, 9),
-        publishedAt: post.publishedAt || new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
-      
-      postCache.push(newPost);
-      localStorage.setItem('blogPosts', JSON.stringify(postCache));
-      
-      toast.success("Created post locally. Changes will not sync to other devices until server is available.");
-      return newPost;
-    } catch (localError) {
-      console.error("Failed to save locally:", localError);
-      throw error;
-    }
-  }
-};
-
-// Update a post
-export const updatePost = async (id: string, post: Partial<BlogPost>) => {
-  try {
-    console.log(`Updating post ${id} with data:`, post);
-    
-    // Send to API
-    const response = await fetch(`${API_URL}/posts/${id}`, {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        ...post,
-        updatedAt: new Date().toISOString(),
-      }),
-    });
-    
-    if (!response.ok) {
-      throw new Error(`API error: ${response.status}`);
-    }
-    
-    const updatedPost = await response.json();
-    
-    // Update cache
-    const index = postCache.findIndex(p => p.id === id);
-    if (index !== -1) {
-      postCache[index] = updatedPost;
-      localStorage.setItem('blogPosts', JSON.stringify(postCache));
-    }
-    
-    return updatedPost;
-  } catch (error) {
-    console.error(`Error updating post ${id}:`, error);
-    
-    // Also update locally even on API failure
-    try {
-      const index = postCache.findIndex(p => p.id === id);
-      if (index !== -1) {
-        postCache[index] = {
-          ...postCache[index],
-          ...post,
-          updatedAt: new Date().toISOString(),
-        };
-        localStorage.setItem('blogPosts', JSON.stringify(postCache));
-        
-        toast.success("Updated post locally. Changes will not sync to other devices until server is available.");
-        return postCache[index];
-      }
-    } catch (localError) {
-      console.error("Failed to update locally:", localError);
-    }
-    
-    throw error;
-  }
-};
-
-// Delete a post
-export const deletePost = async (id: string) => {
-  try {
-    console.log(`Deleting post ${id}`);
-    
-    // Send to API
-    const response = await fetch(`${API_URL}/posts/${id}`, {
-      method: 'DELETE',
-    });
-    
-    if (!response.ok) {
-      throw new Error(`API error: ${response.status}`);
-    }
-    
-    // Update cache
-    postCache = postCache.filter(post => post.id !== id);
-    localStorage.setItem('blogPosts', JSON.stringify(postCache));
-    
-    return { success: true };
-  } catch (error) {
-    console.error(`Error deleting post ${id}:`, error);
-    
-    // Also delete locally even on API failure
-    try {
-      postCache = postCache.filter(post => post.id !== id);
-      localStorage.setItem('blogPosts', JSON.stringify(postCache));
-      
-      toast.success("Deleted post locally. Changes will not sync to other devices until server is available.");
-      return { success: true, localOnly: true };
-    } catch (localError) {
-      console.error("Failed to delete locally:", localError);
-    }
-    
-    throw error;
-  }
-};

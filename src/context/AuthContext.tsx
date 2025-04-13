@@ -22,6 +22,7 @@ interface AuthContextType {
   isAdmin: boolean;
   updateAdminCredentials: (credentials: AdminCredentials) => void;
   getAdminEmail: () => string;
+  getAdminName: () => string; // Added this function
 }
 
 const DEFAULT_ADMIN = {
@@ -31,6 +32,7 @@ const DEFAULT_ADMIN = {
 };
 
 const ADMIN_STORAGE_KEY = "ah-blogger-admin-credentials";
+const USER_STORAGE_KEY = "ah-blogger-user";
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -53,13 +55,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     // Check if user is already logged in using localStorage
-    const storedUser = localStorage.getItem("ah-blogger-user");
+    const storedUser = localStorage.getItem(USER_STORAGE_KEY);
     if (storedUser) {
       try {
         setUser(JSON.parse(storedUser));
       } catch (error) {
         console.error("Failed to parse stored user:", error);
-        localStorage.removeItem("ah-blogger-user");
+        localStorage.removeItem(USER_STORAGE_KEY);
       }
     }
     setIsLoading(false);
@@ -68,11 +70,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const updateAdminCredentials = (credentials: AdminCredentials) => {
     setAdminCredentials(credentials);
     localStorage.setItem(ADMIN_STORAGE_KEY, JSON.stringify(credentials));
+    
+    // If the current user is an admin, update their session with the new name/email
+    if (user?.isAdmin) {
+      const updatedUser: User = {
+        ...user,
+        name: credentials.name,
+        email: credentials.email
+      };
+      setUser(updatedUser);
+      localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(updatedUser));
+    }
+    
     toast.success("Admin credentials updated successfully!");
   };
 
   const getAdminEmail = () => {
     return adminCredentials.email;
+  };
+  
+  const getAdminName = () => {
+    return adminCredentials.name;
   };
 
   const login = async (email: string, password: string): Promise<boolean> => {
@@ -85,7 +103,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       };
       
       setUser(userData);
-      localStorage.setItem("ah-blogger-user", JSON.stringify(userData));
+      localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(userData));
       toast.success("Successfully logged in!");
       return true;
     }
@@ -96,7 +114,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = () => {
     setUser(null);
-    localStorage.removeItem("ah-blogger-user");
+    localStorage.removeItem(USER_STORAGE_KEY);
     toast.success("Successfully logged out");
   };
 
@@ -108,10 +126,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     isAdmin: user?.isAdmin || false,
     updateAdminCredentials,
     getAdminEmail,
+    getAdminName,
   };
 
   if (isLoading) {
-    // You could return a loading spinner here
     return <div>Loading...</div>;
   }
 

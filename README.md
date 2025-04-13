@@ -1,73 +1,233 @@
-# Welcome to your Lovable project
 
-## Project info
+# AH Blogger - Modern Blog Platform
 
-**URL**: https://lovable.dev/projects/fa62853f-f782-4950-9ac1-a8aa4973f905
+## Overview
 
-## How can I edit this code?
+AH Blogger is a modern, responsive blog platform built with React, TypeScript, and SQLite. It features a clean, user-friendly interface with admin capabilities for content management.
 
-There are several ways of editing your application.
+![AH Blogger Screenshot](https://images.unsplash.com/photo-1499750310107-5fef28a66643?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVuY3x8MnwwfHwxMzg4NDc3MzYwfA%3D%3D&auto=format&fit=crop&w=1000&q=80)
 
-**Use Lovable**
+## Features
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/fa62853f-f782-4950-9ac1-a8aa4973f905) and start prompting.
+- Responsive design that works on mobile, tablet, and desktop
+- Admin dashboard for content management
+- Rich text editor for creating and editing posts
+- Category and tag organization
+- Featured posts highlighting
+- Search functionality
+- SQLite database for persistent data storage
+- Netlify serverless functions for backend API
+- Authentication system for admin access
 
-Changes made via Lovable will be committed automatically to this repo.
+## Live Demo
 
-**Use your preferred IDE**
+Visit the live site: [Your Netlify Domain]
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+## Table of Contents
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+1. [Setup and Installation](#setup-and-installation)
+2. [Admin Configuration](#admin-configuration)
+3. [Content Management](#content-management)
+4. [Deployment Guide](#deployment-guide)
+5. [Customization Options](#customization-options)
+6. [Troubleshooting](#troubleshooting)
+7. [Tech Stack](#tech-stack)
 
-Follow these steps:
+## Setup and Installation
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+### Local Development
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+1. **Clone the repository**
 
-# Step 3: Install the necessary dependencies.
-npm i
+```bash
+git clone [repository-url]
+cd ah-blogger
+```
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+2. **Install dependencies**
+
+```bash
+npm install
+```
+
+3. **Run the development server**
+
+```bash
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+4. **Access the application**
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+Open your browser and navigate to: http://localhost:5173
 
-**Use GitHub Codespaces**
+### Environment Setup
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+No environment variables are required for basic functionality. The application uses SQLite for data storage, which is handled by the Netlify serverless functions.
 
-## What technologies are used for this project?
+## Admin Configuration
 
-This project is built with:
+### Default Admin Credentials
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+- **Email:** admin@example.com
+- **Password:** password123
 
-## How can I deploy this project?
+### Changing Admin Credentials
 
-Simply open [Lovable](https://lovable.dev/projects/fa62853f-f782-4950-9ac1-a8aa4973f905) and click on Share -> Publish.
+1. Log in with the default credentials
+2. Navigate to the Admin Dashboard
+3. Click on "Admin Settings" in the sidebar
+4. Update your name, email, and password
+5. Click "Save Changes"
 
-## Can I connect a custom domain to my Lovable project?
+These settings will persist across sessions in your browser's localStorage. When deployed to Netlify, the changes will be visible across all devices.
 
-Yes it is!
+## Content Management
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+### Creating a New Post
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+1. Log in to the admin dashboard
+2. Click "New Post" button
+3. Fill in the post details:
+   - Title
+   - Content (supports rich text formatting)
+   - Category
+   - Tags (comma separated)
+   - Featured image URL
+   - Featured post toggle (for homepage highlighting)
+4. Click "Publish" to make the post live immediately, or save as draft
+
+### Editing Existing Posts
+
+1. Navigate to the admin dashboard
+2. Find the post in the list and click "Edit"
+3. Make your changes
+4. Click "Update" to save changes
+
+### Organizing Content
+
+- **Categories:** Used for primary organization (e.g., Technology, Science)
+- **Tags:** Used for more granular organization and related content links
+- **Featured Toggle:** Marks posts to appear in the featured section of the homepage
+
+## Deployment Guide
+
+### Deploying to Netlify
+
+1. **Create a Netlify account**
+
+   Sign up at [netlify.com](https://netlify.com) if you don't have an account.
+
+2. **Connect your GitHub repository**
+
+   - Go to the Netlify dashboard
+   - Click "New site from Git"
+   - Select GitHub and authorize Netlify
+   - Select your repository
+
+3. **Configure build settings**
+
+   - Build command: `npm run build`
+   - Publish directory: `dist`
+   - Advanced build settings: 
+     - Add runtime environment variable: `NODE_VERSION` = `18`
+
+4. **Deploy your site**
+
+   Click "Deploy site" and wait for the build to complete.
+
+5. **Configure Netlify Functions**
+
+   The serverless SQLite API will be automatically set up through the netlify.toml configuration.
+
+6. **Custom domain setup (Optional)**
+
+   - Go to "Site settings" > "Domain management"
+   - Click "Add custom domain"
+   - Follow the instructions to set up your domain with Netlify
+
+### Database Persistence
+
+The SQLite database is created and managed in the Netlify Functions environment. The database file is stored in the Netlify deployment and persists across function invocations.
+
+## Customization Options
+
+### Styling and Theming
+
+1. **Colors and Theme**
+
+   - Primary theme colors are defined in `tailwind.config.ts`
+   - To change the main purple theme color, update the `blog-purple` and `blog-dark-purple` values
+
+2. **Layout Customization**
+
+   - Main layout components are in `src/components/Layout.tsx`
+   - Header customization: `src/components/Header.tsx`
+   - Footer customization: `src/components/Footer.tsx`
+   - Sidebar customization: `src/components/Sidebar.tsx`
+
+### Adding New Features
+
+1. **Create new component files** in the `src/components` directory
+2. **Add new pages** in the `src/pages` directory
+3. **Update routes** in `src/App.tsx` if adding new pages
+
+## Troubleshooting
+
+### Common Issues
+
+#### "Unable to connect to the blog server"
+
+This message appears when the application cannot connect to the SQLite database via Netlify Functions. Possible solutions:
+
+1. **Check Netlify Function logs:**
+   - Go to Netlify dashboard > Your site > Functions
+   - Check logs for any errors
+
+2. **Verify deployment settings:**
+   - Ensure `netlify.toml` is properly configured
+   - Check that the function dependencies are installed
+
+3. **Local development:**
+   - For local development, the app will fall back to localStorage data
+
+#### Admin Login Issues
+
+If you cannot log in with admin credentials:
+
+1. **Check browser console** for any errors
+2. **Clear localStorage** using browser dev tools
+3. **Reset to default credentials** by clearing localStorage
+4. **Update credentials** through the Admin Settings page
+
+## Tech Stack
+
+- **Frontend:**
+  - React
+  - TypeScript
+  - Tailwind CSS
+  - shadcn/ui components
+  - Framer Motion for animations
+
+- **Backend:**
+  - Netlify Serverless Functions
+  - SQLite database
+  - JSON Server API layer
+
+- **State Management:**
+  - React Context API
+  - Local storage for persistence and offline fallback
+
+- **Authentication:**
+  - Custom authentication system with localStorage persistence
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Support
+
+For questions or support, please open an issue on the GitHub repository.

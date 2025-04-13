@@ -3,13 +3,15 @@
 [build]
   command = "npm run build"
   publish = "dist"
+  functions = "netlify/functions"
 
-# Handle client-side routing
+# Handle API requests to the serverless function
 [[redirects]]
-  from = "/api/*"
-  to = "/.netlify/functions/server"
+  from = "/.netlify/functions/*"
+  to = "/.netlify/functions/:splat"
   status = 200
 
+# Handle client-side routing
 [[redirects]]
   from = "/*"
   to = "/index.html"
@@ -18,3 +20,8 @@
 # Specify the Node.js version for functions
 [build.environment]
   NODE_VERSION = "18"
+
+# Configure function bundle settings
+[functions]
+  node_bundler = "esbuild"
+  external_node_modules = ["sqlite3"]
