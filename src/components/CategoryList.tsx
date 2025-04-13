@@ -9,8 +9,17 @@ const CategoryList = () => {
 
   useEffect(() => {
     // Fetch all categories
-    const fetchedCategories = getCategories();
-    setCategories(fetchedCategories);
+    const fetchCategories = async () => {
+      try {
+        const fetchedCategories = await getCategories();
+        setCategories(fetchedCategories);
+      } catch (error) {
+        console.error("Error fetching categories:", error);
+        setCategories([]);
+      }
+    };
+    
+    fetchCategories();
   }, []);
 
   return (

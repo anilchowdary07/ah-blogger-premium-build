@@ -13,11 +13,21 @@ const CategoryPage = () => {
 
   useEffect(() => {
     if (category) {
-      // Get posts by category
-      const categoryPosts = getPostsByCategory(category);
-      setPosts(categoryPosts);
-      setLoading(false);
+      const fetchPosts = async () => {
+        setLoading(true);
+        try {
+          // Get posts by category
+          const categoryPosts = await getPostsByCategory(category);
+          setPosts(categoryPosts);
+        } catch (error) {
+          console.error("Error fetching posts by category:", error);
+          setPosts([]);
+        } finally {
+          setLoading(false);
+        }
+      };
 
+      fetchPosts();
       // Scroll to top
       window.scrollTo(0, 0);
     }

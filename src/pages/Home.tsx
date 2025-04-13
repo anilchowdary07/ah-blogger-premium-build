@@ -11,17 +11,26 @@ const Home = () => {
   const [isLoaded, setIsLoaded] = useState(false);
   
   useEffect(() => {
-    // Get featured posts
-    const featured = getFeaturedPosts();
-    setFeaturedPosts(featured);
+    const fetchPosts = async () => {
+      try {
+        // Get featured posts
+        const featured = await getFeaturedPosts();
+        setFeaturedPosts(featured);
+        
+        // Get all posts and sort by date
+        const all = await getAllPosts();
+        const sorted = [...all].sort((a, b) => 
+          new Date(b.date).getTime() - new Date(a.date).getTime()
+        );
+        setRecentPosts(sorted);
+      } catch (error) {
+        console.error("Error fetching posts:", error);
+      } finally {
+        setIsLoaded(true);
+      }
+    };
     
-    // Get all posts and sort by date
-    const all = getAllPosts();
-    const sorted = [...all].sort((a, b) => 
-      new Date(b.date).getTime() - new Date(a.date).getTime()
-    );
-    setRecentPosts(sorted);
-    setIsLoaded(true);
+    fetchPosts();
   }, []);
 
   const container = {

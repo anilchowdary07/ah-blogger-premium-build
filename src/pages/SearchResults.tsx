@@ -19,11 +19,21 @@ const SearchResults = () => {
     setQuery(searchQuery);
     
     if (searchQuery) {
-      setIsSearching(true);
-      // Search posts
-      const results = searchPosts(searchQuery);
-      setPosts(results);
-      setIsSearching(false);
+      const performSearch = async () => {
+        setIsSearching(true);
+        try {
+          // Search posts
+          const results = await searchPosts(searchQuery);
+          setPosts(results);
+        } catch (error) {
+          console.error("Error searching posts:", error);
+          setPosts([]);
+        } finally {
+          setIsSearching(false);
+        }
+      };
+      
+      performSearch();
     } else {
       setPosts([]);
     }

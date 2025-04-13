@@ -25,11 +25,21 @@ const AdminDashboard = () => {
 
   useEffect(() => {
     // Get all posts and sort by date (newest first)
-    const allPosts = getAllPosts();
-    const sortedPosts = [...allPosts].sort((a, b) => 
-      new Date(b.date).getTime() - new Date(a.date).getTime()
-    );
-    setPosts(sortedPosts);
+    const fetchPosts = async () => {
+      try {
+        const allPosts = await getAllPosts();
+        const sortedPosts = [...allPosts].sort((a, b) => 
+          new Date(b.date).getTime() - new Date(a.date).getTime()
+        );
+        setPosts(sortedPosts);
+      } catch (error) {
+        console.error("Error fetching posts:", error);
+        setPosts([]);
+        toast.error("Failed to load posts");
+      }
+    };
+    
+    fetchPosts();
   }, []);
 
   const handleDeleteClick = (post: BlogPost) => {
