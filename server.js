@@ -42,17 +42,21 @@ server.use((req, res, next) => {
   next();
 });
 
-// Set explicit routes for API endpoints
-// Important: These must come BEFORE the catch-all route
-server.use('/api', (req, res, next) => {
-  res.header('Content-Type', 'application/json');
+// Explicitly set Content-Type header for all API responses
+server.use((req, res, next) => {
+  res.header('Content-Type', 'application/json; charset=utf-8');
   next();
-}, router);
+});
+
+// Set explicit routes for API endpoints
+server.use('/api', router);
 
 // Mount Netlify function routes with explicit content-type
 server.use('/.netlify/functions/server', (req, res, next) => {
-  res.header('Content-Type', 'application/json');
-  // Process API requests directly and explicitly to prevent HTML responses
+  // Always set content type for API responses
+  res.header('Content-Type', 'application/json; charset=utf-8');
+  
+  // Process API requests directly
   if (req.url.startsWith('/posts') || req.url === '/') {
     router(req, res, next);
   } else {
@@ -61,7 +65,6 @@ server.use('/.netlify/functions/server', (req, res, next) => {
 });
 
 // Serve frontend for other routes (SPA support)
-// This must come AFTER API routes to prevent interference
 server.get('*', (req, res) => {
   // Skip already processed routes
   if (req.originalUrl.startsWith('/api/') || req.originalUrl.startsWith('/.netlify/functions/server')) {

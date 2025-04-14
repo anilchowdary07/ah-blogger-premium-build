@@ -12,14 +12,15 @@ const CategoryList = () => {
   const { data: fetchedCategories } = useQuery({
     queryKey: ['categories'],
     queryFn: getCategories,
-    onError: (error) => {
-      console.error("Error fetching categories:", error);
-      // Already using default categories from state initialization
-    },
     // Don't retry too many times to avoid overwhelming the server
     retry: 1,
     // Use stale data if available while revalidating
     staleTime: 5 * 60 * 1000, // 5 minutes
+    onSettled: (_data, error) => {
+      if (error) {
+        console.error("Error fetching categories:", error);
+      }
+    }
   });
 
   // Update categories when data is fetched successfully
