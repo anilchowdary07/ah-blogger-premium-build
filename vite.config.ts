@@ -44,19 +44,32 @@ export default defineConfig(({ mode }) => ({
     },
     rollupOptions: {
       output: {
-        manualChunks: (id) => {
-          // Create specific chunks for large dependencies
-          if (id.includes('node_modules/react') || id.includes('node_modules/react-dom')) {
-            return 'react-vendor';
-          }
-          if (id.includes('node_modules/@tanstack/react-query')) {
-            return 'query-vendor';
-          }
+        manualChunks(id) {
+          // Handle specific problematic dependencies
           if (id.includes('node_modules/framer-motion')) {
-            return 'framer-motion'; // Separate chunk for framer-motion
+            return 'framer-motion';
           }
+          
+          // Group React core packages
+          if (id.includes('node_modules/react/') ||
+              id.includes('node_modules/react-dom/')) {
+            return 'react-core';
+          }
+          
+          // Group React Router packages
+          if (id.includes('node_modules/react-router') ||
+              id.includes('node_modules/react-router-dom')) {
+            return 'router';
+          }
+          
+          // Group React Query packages
+          if (id.includes('node_modules/@tanstack/react-query')) {
+            return 'query';
+          }
+          
+          // Group remaining node_modules
           if (id.includes('node_modules')) {
-            return 'vendor'; // All other dependencies
+            return 'vendor';
           }
         }
       }
