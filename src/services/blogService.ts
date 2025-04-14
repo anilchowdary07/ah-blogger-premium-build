@@ -1,3 +1,4 @@
+
 // Blog service that connects to SQLite database via Netlify Functions
 import { toast } from "sonner";
 
@@ -715,3 +716,82 @@ export const createPost = async (post: Omit<BlogPost, "id">) => {
     postCache.push(savedPost);
     
     // Update localStorage backup
+    localStorage.setItem('blogPosts', JSON.stringify(postCache));
+    
+    return savedPost;
+  } catch (error) {
+    console.error("Error in createPost:", error);
+    toast.error("Failed to create post. Please try again.");
+    throw error;
+  }
+};
+
+// Update an existing post
+export const updatePost = async (id: string, post: Partial<BlogPost>) => {
+  try {
+    console.log(`Updating post ${id} with data:`, post);
+    
+    // Add updated timestamp
+    const updatedPost = {
+      ...post,
+      updatedAt: new Date().toISOString()
+    };
+    
+    // Send to API
+    const response = await fetch(`${API_URL}/posts/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(updatedPost),
+    });
+    
+    if (!response.ok) {
+      throw new Error(`API error: ${response.status}`);
+    }
+    
+    const result = await response.json();
+    console.log("Post updated successfully:", result);
+    
+    // Update cache
+    const index = postCache.findIndex(p => p.id === id);
+    if (index !== -1) {
+      postCache[index] = { ...postCache[index], ...result };
+      localStorage.setItem('blogPosts', JSON.stringify(postCache));
+    }
+    
+    return result;
+  } catch (error) {
+    console.error(`Error updating post ${id}:`, error);
+    toast.error("Failed to update post. Please try again.");
+    throw error;
+  }
+};
+
+// Delete a post
+export const deletePost = async (id: string) => {
+  try {
+    console.log(`Deleting post ${id}`);
+    
+    // Send to API
+    const response = await fetch(`${API_URL}/posts/${id}`, {
+      method: 'DELETE',
+    });
+    
+    if (!response.ok) {
+      throw new Error(`API error: ${response.status}`);
+    }
+    
+    console.log("Post deleted successfully");
+    
+    // Update cache
+    postCache = postCache.filter(post => post.id !== id);
+    localStorage.setItem('blogPosts', JSON.stringify(postCache));
+    
+    return { success: true };
+  } catch (error) {
+    console.error(`Error deleting post ${id}:`, error);
+    toast.error("Failed to delete post. Please try again.");
+    throw error;
+  }
+};

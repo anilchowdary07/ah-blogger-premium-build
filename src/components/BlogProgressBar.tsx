@@ -1,7 +1,6 @@
 
 import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
-import { motion } from "framer-motion";
 
 const BlogProgressBar = () => {
   const [width, setWidth] = useState(0);
@@ -34,15 +33,12 @@ const BlogProgressBar = () => {
 
   return (
     <div className="fixed top-16 left-0 right-0 z-50 h-1 bg-muted">
-      <motion.div 
-        className="h-full"
+      <div 
+        className="h-full bg-gradient-to-r from-blog-purple to-blog-dark-purple"
         style={{ 
-          background: `linear-gradient(90deg, hsla(277, 75%, 84%, 1) 0%, hsla(297, 50%, 51%, 1) 100%)`,
-          transformOrigin: "left"
+          width: `${width}%`,
+          transition: "width 0.1s ease-out"
         }}
-        initial={{ scaleX: 0 }}
-        animate={{ scaleX: width / 100 }}
-        transition={{ duration: 0.1 }}
         role="progressbar"
         aria-valuenow={width}
         aria-valuemin={0}
