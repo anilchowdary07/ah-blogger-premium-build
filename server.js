@@ -14,7 +14,6 @@ server.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', '*');
   res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
-  res.header('Content-Type', 'application/json');
   
   // Handle preflight requests
   if (req.method === 'OPTIONS') {
@@ -43,7 +42,7 @@ server.use((req, res, next) => {
   next();
 });
 
-// Mount API routes - ensure JSON content type
+// Set Content-Type header for all API responses
 server.use('/api', (req, res, next) => {
   res.header('Content-Type', 'application/json');
   next();
@@ -56,10 +55,10 @@ server.use('/.netlify/functions/server', (req, res, next) => {
 });
 
 // Serve frontend for all other routes (SPA support)
-server.get('*', (req, res) => {
+server.get('*', (req, res, next) => {
   // Skip API routes
   if (req.url.startsWith('/api') || req.url.startsWith('/.netlify/functions/server')) {
-    return next();
+    next();
   } else {
     res.sendFile(path.join(__dirname, 'dist', 'index.html'));
   }

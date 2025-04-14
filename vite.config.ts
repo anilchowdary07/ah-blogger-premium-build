@@ -22,7 +22,7 @@ export default defineConfig(({ mode }) => ({
   },
   optimizeDeps: {
     include: ['react-router-dom'],
-    exclude: ['framer-motion'], // Exclude problematic dependencies
+    exclude: ['framer-motion'], // Explicitly exclude problematic dependencies
     esbuildOptions: {
       define: {
         global: 'globalThis'
