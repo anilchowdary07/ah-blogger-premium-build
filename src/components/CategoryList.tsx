@@ -16,19 +16,16 @@ const CategoryList = () => {
     retry: 1,
     // Use stale data if available while revalidating
     staleTime: 5 * 60 * 1000, // 5 minutes
-    onSettled: (_data, error) => {
-      if (error) {
-        console.error("Error fetching categories:", error);
+    // Use onSuccess and onError instead of onSettled for better TypeScript compatibility
+    onSuccess: (data) => {
+      if (data && data.length > 0) {
+        setCategories(data);
       }
+    },
+    onError: (error) => {
+      console.error("Error fetching categories:", error);
     }
   });
-
-  // Update categories when data is fetched successfully
-  useEffect(() => {
-    if (fetchedCategories && fetchedCategories.length > 0) {
-      setCategories(fetchedCategories);
-    }
-  }, [fetchedCategories]);
 
   return (
     <div className="flex flex-wrap gap-2 mb-8">

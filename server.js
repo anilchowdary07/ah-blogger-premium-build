@@ -44,14 +44,16 @@ server.use((req, res, next) => {
 
 // Explicitly set Content-Type header for all API responses
 server.use((req, res, next) => {
-  res.header('Content-Type', 'application/json; charset=utf-8');
+  if (req.url.startsWith('/api') || req.url.startsWith('/.netlify/functions/server')) {
+    res.header('Content-Type', 'application/json; charset=utf-8');
+  }
   next();
 });
 
 // Set explicit routes for API endpoints
 server.use('/api', router);
 
-// Mount Netlify function routes with explicit content-type
+// Mount Netlify function routes
 server.use('/.netlify/functions/server', (req, res, next) => {
   // Always set content type for API responses
   res.header('Content-Type', 'application/json; charset=utf-8');

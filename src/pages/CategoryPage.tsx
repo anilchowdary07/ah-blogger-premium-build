@@ -15,17 +15,15 @@ const CategoryPage = () => {
   const { isLoading } = useQuery({
     queryKey: ['posts', category],
     queryFn: () => category ? getPostsByCategory(category) : Promise.resolve([]),
-    onSettled: (data, error) => {
-      if (data) {
-        setPosts(data);
-        // Scroll to top with smooth animation
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      }
-      if (error) {
-        console.error(`Error fetching posts by category ${category}:`, error);
-        toast.error(`Failed to load ${category} posts. Showing cached content.`);
-        setPosts([]); // Clear posts on error
-      }
+    onSuccess: (data) => {
+      setPosts(data);
+      // Scroll to top with smooth animation
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    },
+    onError: (error) => {
+      console.error(`Error fetching posts by category ${category}:`, error);
+      toast.error(`Failed to load ${category} posts. Showing cached content.`);
+      setPosts([]); // Clear posts on error
     }
   });
 

@@ -44,16 +44,20 @@ export default defineConfig(({ mode }) => ({
     },
     rollupOptions: {
       output: {
-        manualChunks: {
-          vendor: ['react', 'react-dom', 'react-router-dom', '@tanstack/react-query'],
-          ui: [
-            '@radix-ui/react-accordion',
-            '@radix-ui/react-alert-dialog',
-            '@radix-ui/react-avatar',
-            '@radix-ui/react-dialog',
-            '@radix-ui/react-dropdown-menu',
-            '@radix-ui/react-tooltip',
-          ]
+        manualChunks: (id) => {
+          // Create specific chunks for large dependencies
+          if (id.includes('node_modules/react') || id.includes('node_modules/react-dom')) {
+            return 'react-vendor';
+          }
+          if (id.includes('node_modules/@tanstack/react-query')) {
+            return 'query-vendor';
+          }
+          if (id.includes('node_modules/framer-motion')) {
+            return 'framer-motion'; // Separate chunk for framer-motion
+          }
+          if (id.includes('node_modules')) {
+            return 'vendor'; // All other dependencies
+          }
         }
       }
     },
