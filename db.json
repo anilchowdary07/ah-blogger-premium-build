@@ -47,7 +47,61 @@
       "category": "culture",
       "tags": ["hobbies", "analog", "crafts", "digital culture"],
       "readingTime": 7,
-      "featured": true
+      "featured": true,
+      "published": true,
+      "publishedAt": "2024-03-28T10:30:00Z",
+      "updatedAt": "2024-03-28T10:30:00Z"
+    },
+    {
+      "id": "4",
+      "title": "Sustainable Business Models: The Competitive Advantage of Going Green",
+      "slug": "sustainable-business-models",
+      "excerpt": "How companies are finding that environmental responsibility isn't just ethical—it's becoming a crucial competitive advantage.",
+      "content": "<p>For decades, sustainability initiatives were often viewed as corporate social responsibility projects—important for public relations but separate from core business strategy. Today, that paradigm is rapidly shifting as businesses discover that sustainable practices aren't just good for the planet—they're increasingly essential for maintaining competitive advantage.</p>",
+      "coverImage": "https://images.unsplash.com/photo-1497215728101-856f4ea42174",
+      "author": "Marcus Green",
+      "date": "2024-03-25",
+      "category": "business",
+      "tags": ["sustainability", "business strategy", "corporate responsibility"],
+      "readingTime": 9,
+      "featured": false,
+      "published": true,
+      "publishedAt": "2024-03-25T10:30:00Z",
+      "updatedAt": "2024-03-25T10:30:00Z"
+    },
+    {
+      "id": "5",
+      "title": "The Minimalist Approach to Digital Productivity",
+      "slug": "minimalist-digital-productivity",
+      "excerpt": "How embracing digital minimalism can help you focus better and accomplish more in a distraction-filled world.",
+      "content": "<p>In our hyperconnected world, the average knowledge worker faces an unprecedented barrage of digital distractions. Notifications, emails, messages, and the ever-present lure of social media create a fragmented attention environment where sustained focus becomes increasingly rare and valuable.</p>",
+      "coverImage": "https://images.unsplash.com/photo-1526378722484-bd91ca387e72",
+      "author": "Jasmine Lee",
+      "date": "2024-03-20",
+      "category": "technology",
+      "tags": ["productivity", "digital minimalism", "focus", "attention management"],
+      "readingTime": 8,
+      "featured": false,
+      "published": true,
+      "publishedAt": "2024-03-20T10:30:00Z",
+      "updatedAt": "2024-03-20T10:30:00Z"
+    },
+    {
+      "id": "6",
+      "title": "The Science of Sleep: New Discoveries and Practical Applications",
+      "slug": "science-of-sleep-discoveries",
+      "excerpt": "Recent breakthroughs in sleep science and how they can help you optimize your rest for better health and cognitive performance.",
+      "content": "<p>Sleep, once dismissed as a simple state of inactivity, is now recognized as a complex and active process essential to physical health, cognitive function, and emotional wellbeing. Recent scientific advances have dramatically expanded our understanding of what happens during sleep and why it matters so much.</p>",
+      "coverImage": "https://images.unsplash.com/photo-1541781774-7e8bf6de8504",
+      "author": "Dr. Maya Johnson",
+      "date": "2024-03-15",
+      "category": "science",
+      "tags": ["sleep", "health", "neuroscience", "productivity"],
+      "readingTime": 10,
+      "featured": false,
+      "published": true,
+      "publishedAt": "2024-03-15T10:30:00Z",
+      "updatedAt": "2024-03-15T10:30:00Z"
     }
   ]
 }

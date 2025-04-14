@@ -16,16 +16,37 @@ export default defineConfig(({ mode }) => ({
         changeOrigin: true,
         secure: false,
         rewrite: (path) => path,
+        configure: (proxy) => {
+          proxy.on('error', (err) => {
+            console.log('Proxy error:', err);
+          });
+          proxy.on('proxyReq', (proxyReq, req) => {
+            console.log('Proxy request:', req.method, req.url);
+          });
+          proxy.on('proxyRes', (proxyRes, req) => {
+            console.log('Proxy response:', proxyRes.statusCode, req.url);
+          });
+        }
       },
       '/posts': {
         target: 'http://localhost:3000',
         changeOrigin: true,
         secure: false,
+        configure: (proxy) => {
+          proxy.on('error', (err) => {
+            console.log('Posts proxy error:', err);
+          });
+        }
       },
       '/api': {
         target: 'http://localhost:3000',
         changeOrigin: true,
         secure: false,
+        configure: (proxy) => {
+          proxy.on('error', (err) => {
+            console.log('API proxy error:', err);
+          });
+        }
       }
     }
   },
@@ -41,7 +62,6 @@ export default defineConfig(({ mode }) => ({
   },
   optimizeDeps: {
     include: ['react-router-dom', 'sonner', '@tanstack/react-query'],
-    exclude: ['framer-motion'], // Explicitly exclude problematic dependencies
     esbuildOptions: {
       define: {
         global: 'globalThis'
@@ -56,11 +76,6 @@ export default defineConfig(({ mode }) => ({
     rollupOptions: {
       output: {
         manualChunks(id) {
-          // Handle specific problematic dependencies
-          if (id.includes('node_modules/framer-motion')) {
-            return 'framer-motion';
-          }
-          
           // Group React core packages
           if (id.includes('node_modules/react/') ||
               id.includes('node_modules/react-dom/')) {

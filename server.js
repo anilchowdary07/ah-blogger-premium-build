@@ -8,6 +8,7 @@ const middlewares = jsonServer.defaults({
   noCors: false
 });
 const port = process.env.PORT || 3000;
+const fs = require('fs');
 
 // Enable CORS for all origins with proper headers
 server.use((req, res, next) => {
@@ -24,7 +25,6 @@ server.use((req, res, next) => {
 });
 
 // Initialize db.json if it doesn't exist
-const fs = require('fs');
 if (!fs.existsSync('./db.json')) {
   // Create with initial posts to prevent empty database issues
   const initialPosts = [
@@ -40,7 +40,8 @@ if (!fs.existsSync('./db.json')) {
       "category": "technology",
       "tags": ["artificial intelligence", "content creation", "digital media"],
       "readingTime": 6,
-      "featured": true
+      "featured": true,
+      "published": true
     },
     {
       "id": "2",
@@ -54,7 +55,8 @@ if (!fs.existsSync('./db.json')) {
       "category": "science",
       "tags": ["quantum computing", "technology", "physics"],
       "readingTime": 8,
-      "featured": false
+      "featured": false,
+      "published": true
     }
   ];
   fs.writeFileSync('./db.json', JSON.stringify({ posts: initialPosts }));
@@ -76,10 +78,33 @@ server.use((req, res, next) => {
 // Set Content-Type for API responses
 server.use((req, res, next) => {
   // Only set JSON content type for API endpoints
-  if (req.url.startsWith('/api') || req.url === '/posts' || req.url.startsWith('/posts') || req.url.startsWith('/.netlify/functions/server')) {
+  if (req.url.startsWith('/api') || req.url === '/posts' || req.url.startsWith('/posts/') || req.url.startsWith('/.netlify/functions/server')) {
     res.header('Content-Type', 'application/json; charset=utf-8');
   }
   next();
+});
+
+// Handle query parameters for categories
+server.get('/posts', (req, res, next) => {
+  let posts = router.db.get('posts').value();
+  
+  // Filter by category if provided
+  if (req.query.category) {
+    posts = posts.filter(post => post.category === req.query.category);
+  }
+  
+  // Filter by featured if provided
+  if (req.query.featured !== undefined) {
+    const isFeatured = req.query.featured === 'true';
+    posts = posts.filter(post => post.featured === isFeatured);
+  }
+  
+  // Filter by slug if provided
+  if (req.query.slug) {
+    posts = posts.filter(post => post.slug === req.query.slug);
+  }
+  
+  return res.json(posts);
 });
 
 // Error handling middleware

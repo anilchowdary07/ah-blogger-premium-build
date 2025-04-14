@@ -5,17 +5,18 @@ import { getCategories } from '@/services/blogService';
 import { useQuery } from '@tanstack/react-query';
 
 const CategoryList = () => {
+  // Define default categories in case API fails
   const [categories, setCategories] = useState<string[]>(["technology", "science", "culture", "business"]);
   const location = useLocation();
 
-  // Use React Query for better caching and error handling
+  // Use React Query with better retry logic
   const { data: fetchedCategories } = useQuery({
     queryKey: ['categories'],
     queryFn: getCategories,
-    // Don't retry too many times to avoid overwhelming the server
-    retry: 1,
-    // Use stale data if available while revalidating
+    retry: 2,
+    retryDelay: 1000,
     staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchOnWindowFocus: false,
   });
 
   // Update categories when data is available

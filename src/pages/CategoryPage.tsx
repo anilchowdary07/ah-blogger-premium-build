@@ -11,10 +11,14 @@ const CategoryPage = () => {
   const { category } = useParams<{ category: string }>();
   const [posts, setPosts] = useState<BlogPost[]>([]);
 
-  // Use React Query for better data fetching, caching, and error handling
-  const { isLoading, data } = useQuery({
+  // Use React Query with better retry logic
+  const { isLoading, data, error } = useQuery({
     queryKey: ['posts', category],
     queryFn: () => category ? getPostsByCategory(category) : Promise.resolve([]),
+    retry: 2,
+    retryDelay: 1000,
+    staleTime: 30000, // 30 seconds
+    refetchOnWindowFocus: false,
   });
 
   // Update posts when data changes
@@ -28,16 +32,11 @@ const CategoryPage = () => {
 
   // Handle errors with useEffect
   useEffect(() => {
-    // This is triggered if there's an error in React Query
-    const handleError = () => {
-      console.error(`Error fetching posts by category ${category}`);
+    if (error) {
+      console.error(`Error fetching posts by category ${category}:`, error);
       toast.error(`Failed to load ${category} posts. Showing cached content.`);
-    };
-
-    return () => {
-      // Cleanup function
-    };
-  }, [category]);
+    }
+  }, [error, category]);
 
   if (isLoading) {
     return (
@@ -75,7 +74,7 @@ const CategoryPage = () => {
         <CategoryList />
       </div>
 
-      {posts.length > 0 ? (
+      {posts && posts.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {posts.map((post) => (
             <div key={post.id}>
