@@ -9,6 +9,14 @@ export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
     port: 8080,
+    // Add proxy for API requests to avoid CORS issues
+    proxy: {
+      '/.netlify/functions/server': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
+        rewrite: (path) => path,
+      }
+    }
   },
   plugins: [
     react(),
@@ -21,7 +29,7 @@ export default defineConfig(({ mode }) => ({
     },
   },
   optimizeDeps: {
-    include: ['react-router-dom'],
+    include: ['react-router-dom', 'sonner', '@tanstack/react-query'],
     exclude: ['framer-motion'], // Explicitly exclude problematic dependencies
     esbuildOptions: {
       define: {
@@ -37,7 +45,7 @@ export default defineConfig(({ mode }) => ({
     rollupOptions: {
       output: {
         manualChunks: {
-          vendor: ['react', 'react-dom', 'react-router-dom'],
+          vendor: ['react', 'react-dom', 'react-router-dom', '@tanstack/react-query'],
           ui: [
             '@radix-ui/react-accordion',
             '@radix-ui/react-alert-dialog',

@@ -2,25 +2,32 @@
 import { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { getCategories } from '@/services/blogService';
+import { useQuery } from '@tanstack/react-query';
 
 const CategoryList = () => {
-  const [categories, setCategories] = useState<string[]>([]);
+  const [categories, setCategories] = useState<string[]>(["technology", "science", "culture", "business"]);
   const location = useLocation();
 
+  // Use React Query for better caching and error handling
+  const { data: fetchedCategories } = useQuery({
+    queryKey: ['categories'],
+    queryFn: getCategories,
+    onError: (error) => {
+      console.error("Error fetching categories:", error);
+      // Already using default categories from state initialization
+    },
+    // Don't retry too many times to avoid overwhelming the server
+    retry: 1,
+    // Use stale data if available while revalidating
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+
+  // Update categories when data is fetched successfully
   useEffect(() => {
-    // Fetch all categories
-    const fetchCategories = async () => {
-      try {
-        const fetchedCategories = await getCategories();
-        setCategories(fetchedCategories);
-      } catch (error) {
-        console.error("Error fetching categories:", error);
-        setCategories(["technology", "science", "culture", "business"]);
-      }
-    };
-    
-    fetchCategories();
-  }, []);
+    if (fetchedCategories && fetchedCategories.length > 0) {
+      setCategories(fetchedCategories);
+    }
+  }, [fetchedCategories]);
 
   return (
     <div className="flex flex-wrap gap-2 mb-8">

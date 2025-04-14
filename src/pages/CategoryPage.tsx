@@ -1,40 +1,33 @@
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useParams } from "react-router-dom";
 import { getPostsByCategory, BlogPost } from "@/services/blogService";
 import BlogCard from "@/components/BlogCard";
 import CategoryList from "@/components/CategoryList";
 import { toast } from "sonner";
+import { useQuery } from "@tanstack/react-query";
 
 const CategoryPage = () => {
   const { category } = useParams<{ category: string }>();
   const [posts, setPosts] = useState<BlogPost[]>([]);
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (category) {
-      const fetchPosts = async () => {
-        setLoading(true);
-        try {
-          // Get posts by category
-          const categoryPosts = await getPostsByCategory(category);
-          setPosts(categoryPosts);
-        } catch (error) {
-          console.error("Error fetching posts by category:", error);
-          toast.error(`Failed to load ${category} posts. Showing cached content.`);
-          setPosts([]);
-        } finally {
-          setLoading(false);
-        }
-      };
-
-      fetchPosts();
+  // Use React Query for better data fetching, caching, and error handling
+  const { isLoading } = useQuery({
+    queryKey: ['posts', category],
+    queryFn: () => category ? getPostsByCategory(category) : Promise.resolve([]),
+    onSuccess: (data) => {
+      setPosts(data);
       // Scroll to top with smooth animation
       window.scrollTo({ top: 0, behavior: 'smooth' });
+    },
+    onError: (error) => {
+      console.error(`Error fetching posts by category ${category}:`, error);
+      toast.error(`Failed to load ${category} posts. Showing cached content.`);
+      setPosts([]); // Clear posts on error
     }
-  }, [category]);
+  });
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="animate-pulse space-y-8">
         <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-1/3"></div>
