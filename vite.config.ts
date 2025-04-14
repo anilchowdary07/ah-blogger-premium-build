@@ -22,6 +22,7 @@ export default defineConfig(({ mode }) => ({
   },
   // Optimize handling of dependencies that may cause issues
   optimizeDeps: {
+    include: ['framer-motion', 'react-router-dom'],
     esbuildOptions: {
       define: {
         global: 'globalThis'

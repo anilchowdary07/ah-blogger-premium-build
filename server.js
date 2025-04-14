@@ -14,6 +14,7 @@ server.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', '*');
   res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
+  res.header('Content-Type', 'application/json');
   
   // Handle preflight requests
   if (req.method === 'OPTIONS') {
@@ -40,12 +41,23 @@ server.use((req, res, next) => {
   next();
 });
 
+// Handle API requests separately to ensure proper content type
+server.use('/.netlify/functions/server', (req, res, next) => {
+  res.header('Content-Type', 'application/json');
+  router(req, res, next);
+});
+
 // Serve frontend for all other routes (SPA support)
 server.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+  if (req.url.startsWith('/api') || req.url.startsWith('/.netlify/functions/server')) {
+    next();
+  } else {
+    res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+  }
 });
 
 server.listen(port, () => {
   console.log(`JSON Server is running on port ${port}`);
   console.log(`API is available at http://localhost:${port}/api`);
+  console.log(`Netlify functions API is available at http://localhost:${port}/.netlify/functions/server`);
 });

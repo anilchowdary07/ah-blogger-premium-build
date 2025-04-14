@@ -527,10 +527,18 @@ const initialBlogPosts: BlogPost[] = [
 const loadPosts = async (): Promise<BlogPost[]> => {
   try {
     console.log("Attempting to fetch posts from API");
+    
+    // Fix: Use fetch with proper error handling
     const response = await fetch(`${API_URL}/posts`);
     
     if (!response.ok) {
       throw new Error(`API error: ${response.status}`);
+    }
+    
+    // Check if response is valid JSON
+    const contentType = response.headers.get("content-type");
+    if (!contentType || !contentType.includes("application/json")) {
+      throw new Error("Invalid response format - not JSON");
     }
     
     const posts = await response.json();
@@ -577,7 +585,7 @@ let postCache: BlogPost[] = [];
 })();
 
 // Get all blog posts
-export const getAllPosts = async () => {
+export const getAllPosts = async (): Promise<BlogPost[]> => {
   try {
     postCache = await loadPosts();
     return [...postCache];
@@ -588,10 +596,17 @@ export const getAllPosts = async () => {
 };
 
 // Get featured posts
-export const getFeaturedPosts = async () => {
+export const getFeaturedPosts = async (): Promise<BlogPost[]> => {
   try {
+    // Safer API request with proper error checking
     const response = await fetch(`${API_URL}/posts?featured=true`);
     if (!response.ok) throw new Error(`API error: ${response.status}`);
+    
+    const contentType = response.headers.get("content-type");
+    if (!contentType || !contentType.includes("application/json")) {
+      throw new Error("Invalid response format - not JSON");
+    }
+    
     return await response.json();
   } catch (error) {
     console.error("Error in getFeaturedPosts:", error);
@@ -600,15 +615,20 @@ export const getFeaturedPosts = async () => {
 };
 
 // Get post by slug
-export const getPostBySlug = async (slug: string) => {
+export const getPostBySlug = async (slug: string): Promise<BlogPost | undefined> => {
   console.log(`Looking for post with slug: ${slug}`);
   
   try {
-    // Try to get from API first
+    // Try to get from API first with better error handling
     const response = await fetch(`${API_URL}/posts?slug=${slug}`);
     
     if (!response.ok) {
       throw new Error(`API error: ${response.status}`);
+    }
+    
+    const contentType = response.headers.get("content-type");
+    if (!contentType || !contentType.includes("application/json")) {
+      throw new Error("Invalid response format - not JSON");
     }
     
     const posts = await response.json();
@@ -631,10 +651,16 @@ export const getPostBySlug = async (slug: string) => {
 };
 
 // Get posts by category
-export const getPostsByCategory = async (category: string) => {
+export const getPostsByCategory = async (category: string): Promise<BlogPost[]> => {
   try {
     const response = await fetch(`${API_URL}/posts?category=${category}`);
     if (!response.ok) throw new Error(`API error: ${response.status}`);
+    
+    const contentType = response.headers.get("content-type");
+    if (!contentType || !contentType.includes("application/json")) {
+      throw new Error("Invalid response format - not JSON");
+    }
+    
     return await response.json();
   } catch (error) {
     console.error("Error in getPostsByCategory:", error);
@@ -643,7 +669,7 @@ export const getPostsByCategory = async (category: string) => {
 };
 
 // Search posts
-export const searchPosts = async (query: string) => {
+export const searchPosts = async (query: string): Promise<BlogPost[]> => {
   try {
     // For full text search, we'll need to fetch all posts and filter client-side
     const posts = await loadPosts();
@@ -672,7 +698,7 @@ export const searchPosts = async (query: string) => {
 };
 
 // Get all categories
-export const getCategories = async () => {
+export const getCategories = async (): Promise<string[]> => {
   try {
     const posts = await loadPosts();
     const categories = posts.map(post => post.category);
@@ -685,7 +711,7 @@ export const getCategories = async () => {
 };
 
 // Create a new post
-export const createPost = async (post: Omit<BlogPost, "id">) => {
+export const createPost = async (post: Omit<BlogPost, "id">): Promise<BlogPost> => {
   try {
     console.log("Creating post with data:", post);
     
@@ -727,7 +753,7 @@ export const createPost = async (post: Omit<BlogPost, "id">) => {
 };
 
 // Update an existing post
-export const updatePost = async (id: string, post: Partial<BlogPost>) => {
+export const updatePost = async (id: string, post: Partial<BlogPost>): Promise<BlogPost> => {
   try {
     console.log(`Updating post ${id} with data:`, post);
     
@@ -769,7 +795,7 @@ export const updatePost = async (id: string, post: Partial<BlogPost>) => {
 };
 
 // Delete a post
-export const deletePost = async (id: string) => {
+export const deletePost = async (id: string): Promise<{success: boolean}> => {
   try {
     console.log(`Deleting post ${id}`);
     

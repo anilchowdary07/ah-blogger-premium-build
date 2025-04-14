@@ -3,7 +3,6 @@ import { useEffect, useState } from "react";
 import { getAllPosts, getFeaturedPosts, BlogPost } from "@/services/blogService";
 import BlogCard from "@/components/BlogCard";
 import CategoryList from "@/components/CategoryList";
-import { motion } from "framer-motion";
 
 const Home = () => {
   const [featuredPosts, setFeaturedPosts] = useState<BlogPost[]>([]);

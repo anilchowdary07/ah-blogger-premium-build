@@ -15,7 +15,7 @@ const BlogProgressBar = () => {
       
       // Calculate scroll progress as a percentage
       const scrolled = (scrollTop / (scrollHeight - clientHeight)) * 100;
-      setWidth(scrolled);
+      setWidth(Math.min(Math.max(scrolled, 0), 100)); // Ensure value is between 0-100
     };
 
     // Add event listener for scroll
