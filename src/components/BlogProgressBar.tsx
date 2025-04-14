@@ -18,8 +18,8 @@ const BlogProgressBar = () => {
       setWidth(Math.min(Math.max(scrolled, 0), 100)); // Ensure value is between 0-100
     };
 
-    // Add event listener for scroll
-    window.addEventListener('scroll', updateScrollProgress);
+    // Add event listener for scroll with passive option for better performance
+    window.addEventListener('scroll', updateScrollProgress, { passive: true });
     
     // Initial calculation
     updateScrollProgress();

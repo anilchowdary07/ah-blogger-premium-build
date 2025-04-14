@@ -333,14 +333,12 @@ const createSqliteRouter = () => {
   };
 };
 
-// Initialize middlewares
-const middlewares = jsonServer.defaults();
-
 // Enable CORS for all origins
 server.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', '*');
   res.header('Access-Control-Allow-Headers', '*');
   res.header('Access-Control-Allow-Methods', '*');
+  res.header('Content-Type', 'application/json');
   
   // Handle preflight requests
   if (req.method === 'OPTIONS') {
@@ -350,6 +348,8 @@ server.use((req, res, next) => {
   next();
 });
 
+// Use middleware
+const middlewares = jsonServer.defaults();
 server.use(middlewares);
 server.use(jsonServer.bodyParser);
 
@@ -362,27 +362,6 @@ server.use((req, res, next) => {
 // Initialize database and routes
 let sqliteRouter;
 
-// API routes
-server.get('/posts', async (req, res) => {
-  sqliteRouter.getPosts(req, res);
-});
-
-server.get('/posts/:id', async (req, res) => {
-  sqliteRouter.getPostById(req, res);
-});
-
-server.post('/posts', async (req, res) => {
-  sqliteRouter.createPost(req, res);
-});
-
-server.patch('/posts/:id', async (req, res) => {
-  sqliteRouter.updatePost(req, res);
-});
-
-server.delete('/posts/:id', async (req, res) => {
-  sqliteRouter.deletePost(req, res);
-});
-
 exports.handler = async (event, context) => {
   // Initialize database if needed
   await initDatabase();
@@ -390,7 +369,7 @@ exports.handler = async (event, context) => {
   // Create router
   sqliteRouter = createSqliteRouter();
   
-  // Strip off the /api prefix from the path
+  // Strip off the prefix from the path
   const path = event.path.replace(/^\/\.netlify\/functions\/server/, '');
   
   return new Promise((resolve, reject) => {
@@ -399,12 +378,22 @@ exports.handler = async (event, context) => {
       headers: event.headers,
       url: path || '/',
       body: event.body ? JSON.parse(event.body) : null,
-      query: event.queryStringParameters || {}
+      query: event.queryStringParameters || {},
+      params: {}
     };
+    
+    // Extract route params for post ID endpoints
+    const idMatch = path.match(/\/posts\/([^\/]+)/);
+    if (idMatch) {
+      mockRequest.params.id = idMatch[1];
+    }
     
     const mockResponse = {
       statusCode: 200,
-      headers: {},
+      headers: {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*'
+      },
       body: '',
       
       status(status) {
@@ -413,7 +402,6 @@ exports.handler = async (event, context) => {
       },
       
       json(data) {
-        this.headers['Content-Type'] = 'application/json';
         this.body = JSON.stringify(data);
         resolve({
           statusCode: this.statusCode,
@@ -437,6 +425,43 @@ exports.handler = async (event, context) => {
       }
     };
     
-    server(mockRequest, mockResponse);
+    // Route the request
+    try {
+      if (path === '/posts' || path === '/' || path === '') {
+        if (mockRequest.method === 'GET') {
+          sqliteRouter.getPosts(mockRequest, mockResponse);
+        } else if (mockRequest.method === 'POST') {
+          sqliteRouter.createPost(mockRequest, mockResponse);
+        } else {
+          mockResponse.status(405).json({ error: 'Method not allowed' });
+        }
+      } else if (path.match(/\/posts\/[^\/]+/)) {
+        if (mockRequest.method === 'GET') {
+          sqliteRouter.getPostById(mockRequest, mockResponse);
+        } else if (mockRequest.method === 'PATCH' || mockRequest.method === 'PUT') {
+          sqliteRouter.updatePost(mockRequest, mockResponse);
+        } else if (mockRequest.method === 'DELETE') {
+          sqliteRouter.deletePost(mockRequest, mockResponse);
+        } else {
+          mockResponse.status(405).json({ error: 'Method not allowed' });
+        }
+      } else if (path.startsWith('/posts')) {
+        // Handle query parameter endpoints
+        if (mockRequest.method === 'GET') {
+          sqliteRouter.getPosts(mockRequest, mockResponse);
+        } else {
+          mockResponse.status(405).json({ error: 'Method not allowed' });
+        }
+      } else {
+        mockResponse.status(404).json({ error: 'Not found' });
+      }
+    } catch (error) {
+      console.error('Error handling request:', error);
+      resolve({
+        statusCode: 500,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ error: 'Internal server error' })
+      });
+    }
   });
 };

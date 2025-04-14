@@ -20,9 +20,9 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
-  // Optimize handling of dependencies that may cause issues
   optimizeDeps: {
-    include: ['framer-motion', 'react-router-dom'],
+    include: ['react-router-dom'],
+    exclude: ['framer-motion'], // Exclude problematic dependencies
     esbuildOptions: {
       define: {
         global: 'globalThis'
@@ -33,6 +33,21 @@ export default defineConfig(({ mode }) => ({
     sourcemap: true,
     commonjsOptions: {
       transformMixedEsModules: true,
+    },
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom', 'react-router-dom'],
+          ui: [
+            '@radix-ui/react-accordion',
+            '@radix-ui/react-alert-dialog',
+            '@radix-ui/react-avatar',
+            '@radix-ui/react-dialog',
+            '@radix-ui/react-dropdown-menu',
+            '@radix-ui/react-tooltip',
+          ]
+        }
+      }
     }
   }
 }));

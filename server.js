@@ -31,9 +31,11 @@ if (!fs.existsSync('./db.json')) {
   console.log('Created initial db.json file');
 }
 
-// API routes - ensure they're mounted correctly
-server.use('/api', middlewares);
-server.use('/api', router);
+// Use middleware before mounting the router
+server.use(middlewares);
+
+// Parse JSON request bodies
+server.use(jsonServer.bodyParser);
 
 // Log all requests to help with debugging
 server.use((req, res, next) => {
@@ -41,7 +43,13 @@ server.use((req, res, next) => {
   next();
 });
 
-// Handle API requests separately to ensure proper content type
+// Mount API routes - ensure JSON content type
+server.use('/api', (req, res, next) => {
+  res.header('Content-Type', 'application/json');
+  next();
+}, router);
+
+// Mount Netlify function routes
 server.use('/.netlify/functions/server', (req, res, next) => {
   res.header('Content-Type', 'application/json');
   router(req, res, next);
@@ -49,8 +57,9 @@ server.use('/.netlify/functions/server', (req, res, next) => {
 
 // Serve frontend for all other routes (SPA support)
 server.get('*', (req, res) => {
+  // Skip API routes
   if (req.url.startsWith('/api') || req.url.startsWith('/.netlify/functions/server')) {
-    next();
+    return next();
   } else {
     res.sendFile(path.join(__dirname, 'dist', 'index.html'));
   }

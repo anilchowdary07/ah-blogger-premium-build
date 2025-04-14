@@ -527,18 +527,16 @@ const initialBlogPosts: BlogPost[] = [
 const loadPosts = async (): Promise<BlogPost[]> => {
   try {
     console.log("Attempting to fetch posts from API");
-    
-    // Fix: Use fetch with proper error handling
     const response = await fetch(`${API_URL}/posts`);
     
     if (!response.ok) {
       throw new Error(`API error: ${response.status}`);
     }
     
-    // Check if response is valid JSON
-    const contentType = response.headers.get("content-type");
-    if (!contentType || !contentType.includes("application/json")) {
-      throw new Error("Invalid response format - not JSON");
+    // Check if response is JSON
+    const contentType = response.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      throw new Error('Invalid response format - not JSON');
     }
     
     const posts = await response.json();
@@ -585,7 +583,7 @@ let postCache: BlogPost[] = [];
 })();
 
 // Get all blog posts
-export const getAllPosts = async (): Promise<BlogPost[]> => {
+export const getAllPosts = async () => {
   try {
     postCache = await loadPosts();
     return [...postCache];
@@ -596,15 +594,18 @@ export const getAllPosts = async (): Promise<BlogPost[]> => {
 };
 
 // Get featured posts
-export const getFeaturedPosts = async (): Promise<BlogPost[]> => {
+export const getFeaturedPosts = async () => {
   try {
-    // Safer API request with proper error checking
     const response = await fetch(`${API_URL}/posts?featured=true`);
-    if (!response.ok) throw new Error(`API error: ${response.status}`);
     
-    const contentType = response.headers.get("content-type");
-    if (!contentType || !contentType.includes("application/json")) {
-      throw new Error("Invalid response format - not JSON");
+    if (!response.ok) {
+      throw new Error(`API error: ${response.status}`);
+    }
+    
+    // Check if response is JSON
+    const contentType = response.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      throw new Error('Invalid response format - not JSON');
     }
     
     return await response.json();
@@ -615,20 +616,21 @@ export const getFeaturedPosts = async (): Promise<BlogPost[]> => {
 };
 
 // Get post by slug
-export const getPostBySlug = async (slug: string): Promise<BlogPost | undefined> => {
+export const getPostBySlug = async (slug: string) => {
   console.log(`Looking for post with slug: ${slug}`);
   
   try {
-    // Try to get from API first with better error handling
+    // Try to get from API first
     const response = await fetch(`${API_URL}/posts?slug=${slug}`);
     
     if (!response.ok) {
       throw new Error(`API error: ${response.status}`);
     }
     
-    const contentType = response.headers.get("content-type");
-    if (!contentType || !contentType.includes("application/json")) {
-      throw new Error("Invalid response format - not JSON");
+    // Check if response is JSON
+    const contentType = response.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      throw new Error('Invalid response format - not JSON');
     }
     
     const posts = await response.json();
@@ -651,14 +653,18 @@ export const getPostBySlug = async (slug: string): Promise<BlogPost | undefined>
 };
 
 // Get posts by category
-export const getPostsByCategory = async (category: string): Promise<BlogPost[]> => {
+export const getPostsByCategory = async (category: string) => {
   try {
     const response = await fetch(`${API_URL}/posts?category=${category}`);
-    if (!response.ok) throw new Error(`API error: ${response.status}`);
     
-    const contentType = response.headers.get("content-type");
-    if (!contentType || !contentType.includes("application/json")) {
-      throw new Error("Invalid response format - not JSON");
+    if (!response.ok) {
+      throw new Error(`API error: ${response.status}`);
+    }
+    
+    // Check if response is JSON
+    const contentType = response.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      throw new Error('Invalid response format - not JSON');
     }
     
     return await response.json();
@@ -669,7 +675,7 @@ export const getPostsByCategory = async (category: string): Promise<BlogPost[]> 
 };
 
 // Search posts
-export const searchPosts = async (query: string): Promise<BlogPost[]> => {
+export const searchPosts = async (query: string) => {
   try {
     // For full text search, we'll need to fetch all posts and filter client-side
     const posts = await loadPosts();
@@ -698,7 +704,7 @@ export const searchPosts = async (query: string): Promise<BlogPost[]> => {
 };
 
 // Get all categories
-export const getCategories = async (): Promise<string[]> => {
+export const getCategories = async () => {
   try {
     const posts = await loadPosts();
     const categories = posts.map(post => post.category);
@@ -711,7 +717,7 @@ export const getCategories = async (): Promise<string[]> => {
 };
 
 // Create a new post
-export const createPost = async (post: Omit<BlogPost, "id">): Promise<BlogPost> => {
+export const createPost = async (post: Omit<BlogPost, "id">) => {
   try {
     console.log("Creating post with data:", post);
     
@@ -746,47 +752,49 @@ export const createPost = async (post: Omit<BlogPost, "id">): Promise<BlogPost> 
     
     return savedPost;
   } catch (error) {
-    console.error("Error in createPost:", error);
+    console.error("Error creating post:", error);
     toast.error("Failed to create post. Please try again.");
     throw error;
   }
 };
 
-// Update an existing post
-export const updatePost = async (id: string, post: Partial<BlogPost>): Promise<BlogPost> => {
+// Update a post
+export const updatePost = async (id: string, updates: Partial<BlogPost>) => {
   try {
-    console.log(`Updating post ${id} with data:`, post);
+    console.log(`Updating post ${id} with:`, updates);
     
     // Add updated timestamp
-    const updatedPost = {
-      ...post,
-      updatedAt: new Date().toISOString()
+    const postWithTimestamp = {
+      ...updates,
+      updatedAt: new Date().toISOString(),
     };
     
     // Send to API
     const response = await fetch(`${API_URL}/posts/${id}`, {
-      method: 'PUT',
+      method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(updatedPost),
+      body: JSON.stringify(postWithTimestamp),
     });
     
     if (!response.ok) {
       throw new Error(`API error: ${response.status}`);
     }
     
-    const result = await response.json();
-    console.log("Post updated successfully:", result);
+    const updatedPost = await response.json();
+    console.log("Post updated successfully:", updatedPost);
     
     // Update cache
-    const index = postCache.findIndex(p => p.id === id);
+    const index = postCache.findIndex(post => post.id === id);
     if (index !== -1) {
-      postCache[index] = { ...postCache[index], ...result };
+      postCache[index] = updatedPost;
+      
+      // Update localStorage backup
       localStorage.setItem('blogPosts', JSON.stringify(postCache));
     }
     
-    return result;
+    return updatedPost;
   } catch (error) {
     console.error(`Error updating post ${id}:`, error);
     toast.error("Failed to update post. Please try again.");
@@ -795,7 +803,7 @@ export const updatePost = async (id: string, post: Partial<BlogPost>): Promise<B
 };
 
 // Delete a post
-export const deletePost = async (id: string): Promise<{success: boolean}> => {
+export const deletePost = async (id: string) => {
   try {
     console.log(`Deleting post ${id}`);
     
@@ -812,9 +820,11 @@ export const deletePost = async (id: string): Promise<{success: boolean}> => {
     
     // Update cache
     postCache = postCache.filter(post => post.id !== id);
+    
+    // Update localStorage backup
     localStorage.setItem('blogPosts', JSON.stringify(postCache));
     
-    return { success: true };
+    return true;
   } catch (error) {
     console.error(`Error deleting post ${id}:`, error);
     toast.error("Failed to delete post. Please try again.");

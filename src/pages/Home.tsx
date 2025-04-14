@@ -35,7 +35,7 @@ const Home = () => {
   return (
     <div className="space-y-12">
       {/* Hero Section */}
-      <section className="text-center mb-12 animate-fade-in">
+      <section className="text-center mb-12">
         <div>
           <h1 className="font-serif font-bold text-4xl md:text-5xl lg:text-6xl mb-6 bg-gradient-to-r from-blog-purple to-blog-dark-purple bg-clip-text text-transparent">
             AH<span className="text-blog-purple">Bloggers</span>
@@ -47,20 +47,20 @@ const Home = () => {
       </section>
       
       {/* Categories */}
-      <section className="animate-fade-in">
+      <section>
         <CategoryList />
       </section>
       
       {/* Featured Posts */}
       {featuredPosts.length > 0 && (
-        <section className="animate-fade-in">
+        <section>
           <div className="flex items-center mb-6">
             <h2 className="font-serif text-2xl md:text-3xl font-semibold">Featured Posts</h2>
             <div className="ml-4 h-px bg-gradient-to-r from-blog-purple to-transparent flex-grow"></div>
           </div>
           <div className="space-y-8">
             {featuredPosts.map((post) => (
-              <div key={post.id} className="animate-fade-in">
+              <div key={post.id}>
                 <BlogCard post={post} featured={true} />
               </div>
             ))}
@@ -69,14 +69,14 @@ const Home = () => {
       )}
       
       {/* Recent Posts */}
-      <section className="animate-fade-in">
+      <section>
         <div className="flex items-center mb-6">
           <h2 className="font-serif text-2xl md:text-3xl font-semibold">Recent Posts</h2>
           <div className="ml-4 h-px bg-gradient-to-r from-blog-purple to-transparent flex-grow"></div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {recentPosts.slice(0, 6).map((post) => (
-            <div key={post.id} className="animate-fade-in">
+            <div key={post.id}>
               <BlogCard post={post} />
             </div>
           ))}
