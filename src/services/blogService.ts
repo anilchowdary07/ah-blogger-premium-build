@@ -1,9 +1,11 @@
-
 // Blog service that connects to SQLite database via Netlify Functions
 import { toast } from "sonner";
 
 // Use relative API URL for both development and production
 const API_URL = "/.netlify/functions/server";
+
+// Add direct posts endpoint as a fallback
+const POSTS_URL = "/posts";
 
 export interface BlogPost {
   id: string;
@@ -523,50 +525,87 @@ const initialBlogPosts: BlogPost[] = [
   },
 ];
 
-// Helper function to load posts from API with localStorage fallback
+// Helper function to load posts from API with multiple fallbacks
 const loadPosts = async (): Promise<BlogPost[]> => {
-  try {
-    console.log("Attempting to fetch posts from API");
-    const response = await fetch(`${API_URL}/posts`);
-    
-    if (!response.ok) {
-      throw new Error(`API error: ${response.status}`);
-    }
-    
-    // Check if response is JSON
-    const contentType = response.headers.get('content-type');
-    if (!contentType || !contentType.includes('application/json')) {
-      throw new Error('Invalid response format - not JSON');
-    }
-    
-    const posts = await response.json();
-    console.log("Loaded posts from API:", posts.length);
-    
-    // Cache the data in localStorage as a backup
-    localStorage.setItem('blogPosts', JSON.stringify(posts));
-    
-    return posts;
-  } catch (error) {
-    console.error("Error loading posts from API:", error);
-    console.log("Falling back to localStorage");
-    
-    // Try to get from localStorage
+  // Try different endpoints in sequence
+  const endpoints = [
+    API_URL + "/posts",
+    POSTS_URL,
+    "/api/posts"
+  ];
+  
+  let lastError = null;
+  
+  // Try each endpoint until one works
+  for (const endpoint of endpoints) {
     try {
-      const savedPosts = localStorage.getItem('blogPosts');
-      if (savedPosts) {
-        const parsedPosts = JSON.parse(savedPosts);
-        console.log("Loaded posts from localStorage:", parsedPosts.length);
+      console.log(`Attempting to fetch posts from ${endpoint}`);
+      const response = await fetch(endpoint, {
+        headers: {
+          'Accept': 'application/json',
+          'Cache-Control': 'no-cache'
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status}`);
+      }
+      
+      // Check if response is JSON
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        console.warn(`Invalid content type from ${endpoint}: ${contentType}`);
+        continue; // Try next endpoint
+      }
+      
+      const posts = await response.json();
+      console.log(`Successfully loaded ${posts.length} posts from ${endpoint}`);
+      
+      // Check if we got actual posts
+      if (!Array.isArray(posts)) {
+        if (posts && posts.posts && Array.isArray(posts.posts)) {
+          // Handle response in format { posts: [] }
+          console.log("Unwrapping posts from response object");
+          const unwrappedPosts = posts.posts;
+          
+          // Cache the data in localStorage as a backup
+          localStorage.setItem('blogPosts', JSON.stringify(unwrappedPosts));
+          return unwrappedPosts;
+        } else {
+          console.warn(`Invalid posts format from ${endpoint}`);
+          continue; // Try next endpoint
+        }
+      }
+      
+      // Cache the data in localStorage as a backup
+      localStorage.setItem('blogPosts', JSON.stringify(posts));
+      return posts;
+    } catch (error) {
+      console.error(`Error loading posts from ${endpoint}:`, error);
+      lastError = error;
+      // Continue to next endpoint
+    }
+  }
+  
+  // All endpoints failed, try localStorage
+  try {
+    console.log("All API endpoints failed. Falling back to localStorage");
+    const savedPosts = localStorage.getItem('blogPosts');
+    if (savedPosts) {
+      const parsedPosts = JSON.parse(savedPosts);
+      console.log(`Loaded ${parsedPosts.length} posts from localStorage`);
+      if (Array.isArray(parsedPosts) && parsedPosts.length > 0) {
         return parsedPosts;
       }
-    } catch (localError) {
-      console.error("Error loading from localStorage:", localError);
     }
-    
-    // Last resort - use initial posts
-    console.log("Using initial blog posts");
-    toast.error("Unable to connect to the blog server. Using initial data.");
-    return [...initialBlogPosts];
+  } catch (localError) {
+    console.error("Error loading from localStorage:", localError);
   }
+  
+  // Last resort - use initial posts
+  console.log("Using initial blog posts as all other methods failed");
+  toast.error("Unable to connect to the blog server. Using initial data.");
+  return [...initialBlogPosts];
 };
 
 // In-memory cache of blog posts
@@ -589,6 +628,7 @@ export const getAllPosts = async () => {
     return [...postCache];
   } catch (error) {
     console.error("Error in getAllPosts:", error);
+    toast.error("Error loading posts. Using cached data.");
     return [...postCache];
   }
 };
@@ -596,19 +636,41 @@ export const getAllPosts = async () => {
 // Get featured posts
 export const getFeaturedPosts = async () => {
   try {
-    const response = await fetch(`${API_URL}/posts?featured=true`);
+    // Try direct API request
+    const endpoints = [
+      `${API_URL}/posts?featured=true`,
+      `${POSTS_URL}?featured=true`,
+      `/api/posts?featured=true`
+    ];
     
-    if (!response.ok) {
-      throw new Error(`API error: ${response.status}`);
+    for (const endpoint of endpoints) {
+      try {
+        const response = await fetch(endpoint);
+        
+        if (!response.ok) {
+          continue; // Try next endpoint
+        }
+        
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+          continue; // Try next endpoint
+        }
+        
+        const posts = await response.json();
+        if (Array.isArray(posts) && posts.length > 0) {
+          return posts;
+        } else if (posts && posts.posts && Array.isArray(posts.posts)) {
+          return posts.posts;
+        }
+      } catch (endpointError) {
+        console.error(`Error fetching from ${endpoint}:`, endpointError);
+        // Continue to next endpoint
+      }
     }
     
-    // Check if response is JSON
-    const contentType = response.headers.get('content-type');
-    if (!contentType || !contentType.includes('application/json')) {
-      throw new Error('Invalid response format - not JSON');
-    }
-    
-    return await response.json();
+    // Fall back to filtering the cache
+    console.log("Falling back to cache for featured posts");
+    return postCache.filter(post => post.featured);
   } catch (error) {
     console.error("Error in getFeaturedPosts:", error);
     return postCache.filter(post => post.featured);

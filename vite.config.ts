@@ -14,7 +14,18 @@ export default defineConfig(({ mode }) => ({
       '/.netlify/functions/server': {
         target: 'http://localhost:3000',
         changeOrigin: true,
+        secure: false,
         rewrite: (path) => path,
+      },
+      '/posts': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
+        secure: false,
+      },
+      '/api': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
+        secure: false,
       }
     }
   },
