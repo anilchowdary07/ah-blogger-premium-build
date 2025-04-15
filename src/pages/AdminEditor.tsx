@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
@@ -111,17 +110,16 @@ const AdminEditor = () => {
   
   useEffect(() => {
     if (post) {
-      console.log("Setting form values from post:", post);
       form.reset({
         title: post.title,
         slug: post.slug,
         content: post.content,
         excerpt: post.excerpt,
         category: post.category,
-        tags: post.tags,
+        tags: post.tags || [],
         coverImage: post.coverImage || "",
-        featured: post.featured || false,
-        published: post.published || false,
+        featured: post.featured,
+        published: post.published,
       });
       setTags(post.tags || []);
     }
@@ -278,10 +276,22 @@ const AdminEditor = () => {
   const isSubmitting = createMutation.isPending || updateMutation.isPending || isSaving;
   const isDeleting = deleteMutation.isPending;
   
-  if (isLoadingPost && isEditMode) {
+  if (isLoadingPost) {
     return (
-      <div className="flex items-center justify-center h-96">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <Loader2 className="h-8 w-8 animate-spin text-gray-500" />
+      </div>
+    );
+  }
+
+  if (isEditMode && !post) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh]">
+        <h2 className="text-2xl font-bold mb-4">Post not found</h2>
+        <Button onClick={() => navigate("/admin")}>
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Back to Dashboard
+        </Button>
       </div>
     );
   }

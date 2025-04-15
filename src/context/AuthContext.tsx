@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useContext, useEffect } from "react";
 import { toast } from "sonner";
 
@@ -98,17 +97,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (email === adminCredentials.email && password === adminCredentials.password) {
       const userData: User = {
         name: adminCredentials.name,
-        email: email,
-        isAdmin: true,
+        email: adminCredentials.email,
+        isAdmin: true
       };
-      
       setUser(userData);
       localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(userData));
-      toast.success("Successfully logged in!");
+      toast.success("Logged in successfully!");
       return true;
     }
-    
-    toast.error("Invalid credentials. Please try again.");
+    toast.error("Invalid credentials");
     return false;
   };
 

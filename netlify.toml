@@ -1,13 +1,11 @@
-
 # netlify.toml
 [build]
   command = "npm run build"
   publish = "dist"
-  functions = "netlify/functions"
 
 # Handle API requests to the serverless function
 [[redirects]]
-  from = "/.netlify/functions/*"
+  from = "/api/*"
   to = "/.netlify/functions/:splat"
   status = 200
 
@@ -23,6 +21,7 @@
 
 # Configure function bundle settings
 [functions]
+  directory = "netlify/functions"
   node_bundler = "esbuild"
   external_node_modules = ["sqlite3"]
 

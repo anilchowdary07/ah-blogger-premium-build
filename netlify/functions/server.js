@@ -1,4 +1,3 @@
-
 const jsonServer = require('json-server');
 const server = jsonServer.create();
 const path = require('path');
@@ -338,6 +337,43 @@ const createSqliteRouter = () => {
         res.setHeader('Content-Type', 'application/json');
         res.json({ success: true });
       });
+    },
+    
+    // Get post by slug
+    async getPostBySlug(req, res, slug) {
+      const db = new sqlite3.Database(dbPath);
+      return new Promise((resolve) => {
+        db.get('SELECT * FROM posts WHERE slug = ?', [slug], (err, row) => {
+          if (err) {
+            console.error('Error getting post by slug:', err);
+            res.status(500).json({ error: 'Database error' });
+            resolve();
+            return;
+          }
+          
+          if (!row) {
+            res.status(404).json({ error: 'Post not found' });
+            resolve();
+            return;
+          }
+          
+          // Parse tags from JSON string
+          try {
+            row.tags = JSON.parse(row.tags || '[]');
+          } catch (e) {
+            row.tags = [];
+          }
+          
+          // Convert boolean fields
+          row.featured = Boolean(row.featured);
+          row.published = Boolean(row.published);
+          
+          res.json(row);
+          resolve();
+        });
+        
+        db.close();
+      });
     }
   };
 };
@@ -460,8 +496,16 @@ exports.handler = async (event, context) => {
             mockResponse.status(405).json({ error: 'Method not allowed' });
           }
         } else if (path.match(/\/posts\/[^\/]+/)) {
+          const slug = path.split('/').pop();
           if (mockRequest.method === 'GET') {
-            sqliteRouter.getPostById(mockRequest, mockResponse);
+            // Check if the parameter is a slug or ID
+            if (slug.includes('-')) {
+              // It's a slug, use getPostBySlug
+              sqliteRouter.getPostBySlug(mockRequest, mockResponse, slug);
+            } else {
+              // It's an ID, use getPostById
+              sqliteRouter.getPostById(mockRequest, mockResponse);
+            }
           } else if (mockRequest.method === 'PATCH' || mockRequest.method === 'PUT') {
             sqliteRouter.updatePost(mockRequest, mockResponse);
           } else if (mockRequest.method === 'DELETE') {

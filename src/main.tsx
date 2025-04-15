@@ -1,25 +1,25 @@
-
-import { createRoot } from 'react-dom/client';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import App from './App.tsx';
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import App from './App';
+import { initializeServices } from './services/initializeServices';
 import './index.css';
 
-// Create a client
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      retry: 2,
-      staleTime: 1000 * 60 * 5, // 5 minutes
-      refetchOnWindowFocus: false,
-    },
-  },
-});
-
-const rootElement = document.getElementById("root");
-if (!rootElement) throw new Error('Root element not found');
-
-createRoot(rootElement).render(
-  <QueryClientProvider client={queryClient}>
-    <App />
-  </QueryClientProvider>
-);
+// Initialize services before rendering the app
+initializeServices()
+  .then(() => {
+    ReactDOM.createRoot(document.getElementById('root')!).render(
+      <React.StrictMode>
+        <App />
+      </React.StrictMode>
+    );
+  })
+  .catch((error) => {
+    console.error('Failed to initialize services:', error);
+    // You might want to show an error UI here
+    ReactDOM.createRoot(document.getElementById('root')!).render(
+      <div>
+        <h1>Error Initializing Application</h1>
+        <p>Please try refreshing the page. If the problem persists, contact support.</p>
+      </div>
+    );
+  });
