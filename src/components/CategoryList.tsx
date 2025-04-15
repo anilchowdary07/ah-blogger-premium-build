@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { getCategories } from '@/services/blogService';
@@ -20,23 +19,12 @@ const CategoryList = () => {
     refetchOnWindowFocus: false,
     refetchOnReconnect: true,
     refetchInterval: false,
-    meta: {
-      errorHandler: () => {
-        toast.error("Couldn't load categories. Using defaults.", {
-          id: "categories-error",
-          duration: 3000
-        });
-      }
-    },
-    // Handle errors with onSettled instead of onError
-    onSettled: (data, error) => {
-      if (error) {
-        toast.error("Couldn't load categories. Using defaults.", {
-          id: "categories-error",
-          duration: 3000
-        });
-        console.error("Error fetching categories:", error);
-      }
+    onError: (error) => {
+      toast.error("Couldn't load categories. Using defaults.", {
+        id: "categories-error",
+        duration: 3000
+      });
+      console.error("Error fetching categories:", error);
     }
   });
 

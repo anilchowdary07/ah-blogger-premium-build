@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { getPostsByCategory, BlogPost } from "@/services/blogService";
@@ -21,15 +20,12 @@ const CategoryPage = () => {
     refetchOnWindowFocus: false,
     refetchOnReconnect: true,
     refetchInterval: false,
-    // Handle errors with onSettled instead of onError
-    onSettled: (data, error) => {
-      if (error) {
-        toast.error(`Failed to load ${category} posts. Showing available content.`, {
-          id: "category-posts-error",
-          duration: 3000
-        });
-        console.error(`Error fetching posts by category ${category}:`, error);
-      }
+    onError: (error) => {
+      toast.error(`Failed to load ${category} posts. Showing available content.`, {
+        id: "category-posts-error",
+        duration: 3000
+      });
+      console.error(`Error fetching posts by category ${category}:`, error);
     }
   });
 
