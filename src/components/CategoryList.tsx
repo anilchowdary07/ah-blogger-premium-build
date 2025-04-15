@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { getCategories } from '@/services/blogService';
 import { useQuery } from '@tanstack/react-query';
+import { toast } from 'sonner';
 
 const CategoryList = () => {
   // Define default categories in case API fails
@@ -10,13 +11,21 @@ const CategoryList = () => {
   const location = useLocation();
 
   // Use React Query with better retry logic
-  const { data: fetchedCategories } = useQuery({
+  const { data: fetchedCategories, isError } = useQuery({
     queryKey: ['categories'],
     queryFn: getCategories,
-    retry: 2,
+    retry: 3,
     retryDelay: 1000,
     staleTime: 5 * 60 * 1000, // 5 minutes
     refetchOnWindowFocus: false,
+    refetchOnReconnect: true,
+    refetchInterval: false,
+    onError: () => {
+      toast.error("Couldn't load categories. Using defaults.", {
+        id: "categories-error",
+        duration: 3000
+      });
+    }
   });
 
   // Update categories when data is available

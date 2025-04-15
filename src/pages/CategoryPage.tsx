@@ -15,10 +15,18 @@ const CategoryPage = () => {
   const { isLoading, data, error } = useQuery({
     queryKey: ['posts', category],
     queryFn: () => category ? getPostsByCategory(category) : Promise.resolve([]),
-    retry: 2,
+    retry: 3,
     retryDelay: 1000,
     staleTime: 30000, // 30 seconds
     refetchOnWindowFocus: false,
+    refetchOnReconnect: true,
+    refetchInterval: false,
+    onError: () => {
+      toast.error(`Failed to load ${category} posts. Showing available content.`, {
+        id: "category-posts-error",
+        duration: 3000
+      });
+    }
   });
 
   // Update posts when data changes
@@ -34,7 +42,6 @@ const CategoryPage = () => {
   useEffect(() => {
     if (error) {
       console.error(`Error fetching posts by category ${category}:`, error);
-      toast.error(`Failed to load ${category} posts. Showing cached content.`);
     }
   }, [error, category]);
 

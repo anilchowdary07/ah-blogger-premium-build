@@ -139,6 +139,8 @@ const createSqliteRouter = () => {
           published: row.published === 1
         }));
         
+        // Ensure content-type is set before sending
+        res.setHeader('Content-Type', 'application/json');
         res.json(posts);
       });
     },
@@ -170,6 +172,8 @@ const createSqliteRouter = () => {
           published: row.published === 1
         };
         
+        // Ensure content-type is set before sending
+        res.setHeader('Content-Type', 'application/json');
         res.json(post);
       });
     },
@@ -218,7 +222,8 @@ const createSqliteRouter = () => {
             return;
           }
           
-          // Return the created post
+          // Return the created post with proper content-type
+          res.setHeader('Content-Type', 'application/json');
           res.status(201).json({
             ...post,
             id: post.id
@@ -302,6 +307,8 @@ const createSqliteRouter = () => {
               published: updatedRow.published === 1
             };
             
+            // Ensure content-type is set before sending
+            res.setHeader('Content-Type', 'application/json');
             res.json(updatedPost);
           });
         });
@@ -327,17 +334,19 @@ const createSqliteRouter = () => {
           return;
         }
         
+        // Ensure content-type is set before sending
+        res.setHeader('Content-Type', 'application/json');
         res.json({ success: true });
       });
     }
   };
 };
 
-// Enable CORS for all origins
+// Enable CORS for all origins with proper headers
 server.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Headers', '*');
-  res.header('Access-Control-Allow-Methods', '*');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
   res.header('Content-Type', 'application/json');
   
   // Handle preflight requests
@@ -363,105 +372,128 @@ server.use((req, res, next) => {
 let sqliteRouter;
 
 exports.handler = async (event, context) => {
-  // Initialize database if needed
-  await initDatabase();
-  
-  // Create router
-  sqliteRouter = createSqliteRouter();
-  
-  // Strip off the prefix from the path
-  const path = event.path.replace(/^\/\.netlify\/functions\/server/, '');
-  
-  return new Promise((resolve, reject) => {
-    const mockRequest = {
-      method: event.httpMethod,
-      headers: event.headers,
-      url: path || '/',
-      body: event.body ? JSON.parse(event.body) : null,
-      query: event.queryStringParameters || {},
-      params: {}
-    };
+  try {
+    // Initialize database if needed
+    await initDatabase();
     
-    // Extract route params for post ID endpoints
-    const idMatch = path.match(/\/posts\/([^\/]+)/);
-    if (idMatch) {
-      mockRequest.params.id = idMatch[1];
-    }
+    // Create router
+    sqliteRouter = createSqliteRouter();
     
-    const mockResponse = {
-      statusCode: 200,
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
-      },
-      body: '',
-      
-      status(status) {
-        this.statusCode = status;
-        return this;
-      },
-      
-      json(data) {
-        this.body = JSON.stringify(data);
+    // Strip off the prefix from the path
+    const path = event.path.replace(/^\/\.netlify\/functions\/server/, '');
+    
+    return new Promise((resolve, reject) => {
+      try {
+        const mockRequest = {
+          method: event.httpMethod,
+          headers: event.headers,
+          url: path || '/',
+          body: event.body ? JSON.parse(event.body) : null,
+          query: event.queryStringParameters || {},
+          params: {}
+        };
+        
+        // Extract route params for post ID endpoints
+        const idMatch = path.match(/\/posts\/([^\/]+)/);
+        if (idMatch) {
+          mockRequest.params.id = idMatch[1];
+        }
+        
+        const mockResponse = {
+          statusCode: 200,
+          headers: {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Headers': 'Origin, X-Requested-With, Content-Type, Accept, Authorization',
+            'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS'
+          },
+          body: '',
+          
+          status(status) {
+            this.statusCode = status;
+            return this;
+          },
+          
+          json(data) {
+            try {
+              this.headers['Content-Type'] = 'application/json';
+              this.body = JSON.stringify(data);
+              resolve({
+                statusCode: this.statusCode,
+                headers: this.headers,
+                body: this.body
+              });
+            } catch (error) {
+              console.error("Error stringifying response:", error);
+              this.status(500);
+              this.body = JSON.stringify({ error: "Error processing response" });
+              resolve({
+                statusCode: this.statusCode,
+                headers: this.headers,
+                body: this.body
+              });
+            }
+          },
+          
+          setHeader(key, value) {
+            this.headers[key] = value;
+            return this;
+          },
+          
+          end(data) {
+            this.body = data || '';
+            resolve({
+              statusCode: this.statusCode,
+              headers: this.headers,
+              body: this.body
+            });
+          }
+        };
+        
+        // Route the request
+        if (path === '/posts' || path === '/' || path === '') {
+          if (mockRequest.method === 'GET') {
+            sqliteRouter.getPosts(mockRequest, mockResponse);
+          } else if (mockRequest.method === 'POST') {
+            sqliteRouter.createPost(mockRequest, mockResponse);
+          } else {
+            mockResponse.status(405).json({ error: 'Method not allowed' });
+          }
+        } else if (path.match(/\/posts\/[^\/]+/)) {
+          if (mockRequest.method === 'GET') {
+            sqliteRouter.getPostById(mockRequest, mockResponse);
+          } else if (mockRequest.method === 'PATCH' || mockRequest.method === 'PUT') {
+            sqliteRouter.updatePost(mockRequest, mockResponse);
+          } else if (mockRequest.method === 'DELETE') {
+            sqliteRouter.deletePost(mockRequest, mockResponse);
+          } else {
+            mockResponse.status(405).json({ error: 'Method not allowed' });
+          }
+        } else if (path.startsWith('/posts')) {
+          // Handle query parameter endpoints
+          if (mockRequest.method === 'GET') {
+            sqliteRouter.getPosts(mockRequest, mockResponse);
+          } else {
+            mockResponse.status(405).json({ error: 'Method not allowed' });
+          }
+        } else {
+          mockResponse.status(404).json({ error: 'Not found' });
+        }
+      } catch (routeError) {
+        console.error('Error handling route:', routeError);
         resolve({
-          statusCode: this.statusCode,
-          headers: this.headers,
-          body: this.body
-        });
-      },
-      
-      setHeader(key, value) {
-        this.headers[key] = value;
-        return this;
-      },
-      
-      end(data) {
-        this.body = data || '';
-        resolve({
-          statusCode: this.statusCode,
-          headers: this.headers,
-          body: this.body
+          statusCode: 500,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ error: 'Internal server error' })
         });
       }
+    });
+  } catch (error) {
+    console.error('Handler error:', error);
+    return {
+      statusCode: 500,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ error: 'Internal server error' })
     };
-    
-    // Route the request
-    try {
-      if (path === '/posts' || path === '/' || path === '') {
-        if (mockRequest.method === 'GET') {
-          sqliteRouter.getPosts(mockRequest, mockResponse);
-        } else if (mockRequest.method === 'POST') {
-          sqliteRouter.createPost(mockRequest, mockResponse);
-        } else {
-          mockResponse.status(405).json({ error: 'Method not allowed' });
-        }
-      } else if (path.match(/\/posts\/[^\/]+/)) {
-        if (mockRequest.method === 'GET') {
-          sqliteRouter.getPostById(mockRequest, mockResponse);
-        } else if (mockRequest.method === 'PATCH' || mockRequest.method === 'PUT') {
-          sqliteRouter.updatePost(mockRequest, mockResponse);
-        } else if (mockRequest.method === 'DELETE') {
-          sqliteRouter.deletePost(mockRequest, mockResponse);
-        } else {
-          mockResponse.status(405).json({ error: 'Method not allowed' });
-        }
-      } else if (path.startsWith('/posts')) {
-        // Handle query parameter endpoints
-        if (mockRequest.method === 'GET') {
-          sqliteRouter.getPosts(mockRequest, mockResponse);
-        } else {
-          mockResponse.status(405).json({ error: 'Method not allowed' });
-        }
-      } else {
-        mockResponse.status(404).json({ error: 'Not found' });
-      }
-    } catch (error) {
-      console.error('Error handling request:', error);
-      resolve({
-        statusCode: 500,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ error: 'Internal server error' })
-      });
-    }
-  });
+  }
 };

@@ -18,13 +18,15 @@ export default defineConfig(({ mode }) => ({
         rewrite: (path) => path,
         configure: (proxy) => {
           proxy.on('error', (err) => {
-            console.log('Proxy error:', err);
+            console.error('Proxy error:', err);
           });
           proxy.on('proxyReq', (proxyReq, req) => {
+            // Ensure we send correct accept header
+            proxyReq.setHeader('Accept', 'application/json');
             console.log('Proxy request:', req.method, req.url);
           });
           proxy.on('proxyRes', (proxyRes, req) => {
-            console.log('Proxy response:', proxyRes.statusCode, req.url);
+            console.log('Proxy response:', proxyRes.statusCode, req.url, 'Content-Type:', proxyRes.headers['content-type']);
           });
         }
       },
@@ -34,7 +36,10 @@ export default defineConfig(({ mode }) => ({
         secure: false,
         configure: (proxy) => {
           proxy.on('error', (err) => {
-            console.log('Posts proxy error:', err);
+            console.error('Posts proxy error:', err);
+          });
+          proxy.on('proxyReq', (proxyReq) => {
+            proxyReq.setHeader('Accept', 'application/json');
           });
         }
       },
@@ -44,7 +49,10 @@ export default defineConfig(({ mode }) => ({
         secure: false,
         configure: (proxy) => {
           proxy.on('error', (err) => {
-            console.log('API proxy error:', err);
+            console.error('API proxy error:', err);
+          });
+          proxy.on('proxyReq', (proxyReq) => {
+            proxyReq.setHeader('Accept', 'application/json');
           });
         }
       }
@@ -62,6 +70,7 @@ export default defineConfig(({ mode }) => ({
   },
   optimizeDeps: {
     include: ['react-router-dom', 'sonner', '@tanstack/react-query'],
+    exclude: ['framer-motion'], // Exclude problematic dependencies
     esbuildOptions: {
       define: {
         global: 'globalThis'
