@@ -25,3 +25,9 @@
 [functions]
   node_bundler = "esbuild"
   external_node_modules = ["sqlite3"]
+
+# Add caching for improved performance
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"

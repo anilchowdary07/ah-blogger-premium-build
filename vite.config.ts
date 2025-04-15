@@ -11,50 +11,16 @@ export default defineConfig(({ mode }) => ({
     port: 8080,
     // Add proxy for API requests to avoid CORS issues
     proxy: {
-      '/.netlify/functions/server': {
-        target: 'http://localhost:3000',
+      '/.netlify/functions/': {
+        target: mode === 'development' ? 'http://localhost:3000' : undefined,
         changeOrigin: true,
         secure: false,
-        rewrite: (path) => path,
-        configure: (proxy) => {
-          proxy.on('error', (err) => {
-            console.error('Proxy error:', err);
-          });
-          proxy.on('proxyReq', (proxyReq, req) => {
-            // Ensure we send correct accept header
-            proxyReq.setHeader('Accept', 'application/json');
-            console.log('Proxy request:', req.method, req.url);
-          });
-          proxy.on('proxyRes', (proxyRes, req) => {
-            console.log('Proxy response:', proxyRes.statusCode, req.url, 'Content-Type:', proxyRes.headers['content-type']);
-          });
-        }
+        rewrite: (path) => path
       },
-      '/posts': {
-        target: 'http://localhost:3000',
+      '/api/': {
+        target: mode === 'development' ? 'http://localhost:3000' : undefined,
         changeOrigin: true,
-        secure: false,
-        configure: (proxy) => {
-          proxy.on('error', (err) => {
-            console.error('Posts proxy error:', err);
-          });
-          proxy.on('proxyReq', (proxyReq) => {
-            proxyReq.setHeader('Accept', 'application/json');
-          });
-        }
-      },
-      '/api': {
-        target: 'http://localhost:3000',
-        changeOrigin: true,
-        secure: false,
-        configure: (proxy) => {
-          proxy.on('error', (err) => {
-            console.error('API proxy error:', err);
-          });
-          proxy.on('proxyReq', (proxyReq) => {
-            proxyReq.setHeader('Accept', 'application/json');
-          });
-        }
+        secure: false
       }
     }
   },
@@ -70,7 +36,6 @@ export default defineConfig(({ mode }) => ({
   },
   optimizeDeps: {
     include: ['react-router-dom', 'sonner', '@tanstack/react-query'],
-    exclude: ['framer-motion'], // Exclude problematic dependencies
     esbuildOptions: {
       define: {
         global: 'globalThis'
