@@ -10,7 +10,7 @@ const CategoryList = () => {
   const [categories, setCategories] = useState<string[]>(["technology", "science", "culture", "business"]);
   const location = useLocation();
 
-  // Use React Query with better retry logic
+  // Use React Query with better retry logic and proper error handling
   const { data: fetchedCategories, isError } = useQuery({
     queryKey: ['categories'],
     queryFn: getCategories,
@@ -20,11 +20,23 @@ const CategoryList = () => {
     refetchOnWindowFocus: false,
     refetchOnReconnect: true,
     refetchInterval: false,
-    onError: () => {
-      toast.error("Couldn't load categories. Using defaults.", {
-        id: "categories-error",
-        duration: 3000
-      });
+    meta: {
+      errorHandler: () => {
+        toast.error("Couldn't load categories. Using defaults.", {
+          id: "categories-error",
+          duration: 3000
+        });
+      }
+    },
+    // Handle errors with onSettled instead of onError
+    onSettled: (data, error) => {
+      if (error) {
+        toast.error("Couldn't load categories. Using defaults.", {
+          id: "categories-error",
+          duration: 3000
+        });
+        console.error("Error fetching categories:", error);
+      }
     }
   });
 

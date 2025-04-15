@@ -11,7 +11,7 @@ const CategoryPage = () => {
   const { category } = useParams<{ category: string }>();
   const [posts, setPosts] = useState<BlogPost[]>([]);
 
-  // Use React Query with better retry logic
+  // Use React Query with better retry logic and proper error handling
   const { isLoading, data, error } = useQuery({
     queryKey: ['posts', category],
     queryFn: () => category ? getPostsByCategory(category) : Promise.resolve([]),
@@ -21,11 +21,15 @@ const CategoryPage = () => {
     refetchOnWindowFocus: false,
     refetchOnReconnect: true,
     refetchInterval: false,
-    onError: () => {
-      toast.error(`Failed to load ${category} posts. Showing available content.`, {
-        id: "category-posts-error",
-        duration: 3000
-      });
+    // Handle errors with onSettled instead of onError
+    onSettled: (data, error) => {
+      if (error) {
+        toast.error(`Failed to load ${category} posts. Showing available content.`, {
+          id: "category-posts-error",
+          duration: 3000
+        });
+        console.error(`Error fetching posts by category ${category}:`, error);
+      }
     }
   });
 
