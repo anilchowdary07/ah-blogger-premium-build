@@ -224,6 +224,9 @@ const initialBlogPosts: BlogPost[] = [
     tags: ["hobbies", "analog", "crafts", "digital culture"],
     readingTime: 7,
     featured: true,
+    published: true,
+    publishedAt: "2024-03-28T10:30:00Z",
+    updatedAt: "2024-03-28T10:30:00Z",
   },
   {
     id: "4",
@@ -525,197 +528,102 @@ const initialBlogPosts: BlogPost[] = [
   },
 ];
 
-// Helper function to load posts from API with multiple fallbacks
-const loadPosts = async (): Promise<BlogPost[]> => {
-  // Try different endpoints in sequence
-  const endpoints = [
-    API_URL + "/posts",
-    POSTS_URL,
-    "/api/posts"
-  ];
-  
-  let lastError = null;
-  
-  // Try each endpoint until one works
-  for (const endpoint of endpoints) {
-    try {
-      console.log(`Attempting to fetch posts from ${endpoint}`);
-      const response = await fetch(endpoint, {
-        headers: {
-          'Accept': 'application/json',
-          'Cache-Control': 'no-cache'
-        }
-      });
-      
-      if (!response.ok) {
-        throw new Error(`API error: ${response.status}`);
-      }
-      
-      // Check if response is JSON
-      const contentType = response.headers.get('content-type');
-      if (!contentType || !contentType.includes('application/json')) {
-        console.warn(`Invalid content type from ${endpoint}: ${contentType}`);
-        continue; // Try next endpoint
-      }
-      
-      const posts = await response.json();
-      console.log(`Successfully loaded ${posts.length} posts from ${endpoint}`);
-      
-      // Check if we got actual posts
-      if (!Array.isArray(posts)) {
-        if (posts && posts.posts && Array.isArray(posts.posts)) {
-          // Handle response in format { posts: [] }
-          console.log("Unwrapping posts from response object");
-          const unwrappedPosts = posts.posts;
-          
-          // Cache the data in localStorage as a backup
-          localStorage.setItem('blogPosts', JSON.stringify(unwrappedPosts));
-          return unwrappedPosts;
-        } else {
-          console.warn(`Invalid posts format from ${endpoint}`);
-          continue; // Try next endpoint
-        }
-      }
-      
-      // Cache the data in localStorage as a backup
-      localStorage.setItem('blogPosts', JSON.stringify(posts));
-      return posts;
-    } catch (error) {
-      console.error(`Error loading posts from ${endpoint}:`, error);
-      lastError = error;
-      // Continue to next endpoint
-    }
-  }
-  
-  // All endpoints failed, try localStorage
-  try {
-    console.log("All API endpoints failed. Falling back to localStorage");
-    const savedPosts = localStorage.getItem('blogPosts');
-    if (savedPosts) {
-      const parsedPosts = JSON.parse(savedPosts);
-      console.log(`Loaded ${parsedPosts.length} posts from localStorage`);
-      if (Array.isArray(parsedPosts) && parsedPosts.length > 0) {
-        return parsedPosts;
-      }
-    }
-  } catch (localError) {
-    console.error("Error loading from localStorage:", localError);
-  }
-  
-  // Last resort - use initial posts
-  console.log("Using initial blog posts as all other methods failed");
-  toast.error("Unable to connect to the blog server. Using initial data.");
-  return [...initialBlogPosts];
-};
-
 // In-memory cache of blog posts
-let postCache: BlogPost[] = [];
-
-// Init the cache
-(async () => {
-  try {
-    postCache = await loadPosts();
-  } catch (error) {
-    console.error("Failed to initialize post cache:", error);
-    postCache = [...initialBlogPosts];
-  }
-})();
+let postCache: BlogPost[] = [...initialBlogPosts];
 
 // Get all blog posts
-export const getAllPosts = async () => {
+export const getAllPosts = async (): Promise<BlogPost[]> => {
   try {
-    postCache = await loadPosts();
+    const response = await fetch(`${API_URL}/posts`);
+    
+    if (!response.ok) {
+      throw new Error(`API error: ${response.status}`);
+    }
+    
+    const posts = await response.json();
+    
+    // Update cache
+    postCache = Array.isArray(posts) ? posts : (posts.posts || []);
+    
+    // Update localStorage backup
+    try {
+      localStorage.setItem('blogPosts', JSON.stringify(postCache));
+    } catch (e) {
+      console.warn('Failed to update localStorage cache:', e);
+    }
+    
     return [...postCache];
   } catch (error) {
     console.error("Error in getAllPosts:", error);
-    toast.error("Error loading posts. Using cached data.");
-    return [...postCache];
+    
+    // Try localStorage first
+    try {
+      const savedPosts = localStorage.getItem('blogPosts');
+      if (savedPosts) {
+        const parsedPosts = JSON.parse(savedPosts);
+        if (Array.isArray(parsedPosts) && parsedPosts.length > 0) {
+          return parsedPosts;
+        }
+      }
+    } catch (e) {
+      console.warn('Failed to read from localStorage:', e);
+    }
+    
+    // Use initial posts as fallback
+    return [...initialBlogPosts];
   }
 };
 
 // Get featured posts
-export const getFeaturedPosts = async () => {
+export const getFeaturedPosts = async (): Promise<BlogPost[]> => {
   try {
-    // Try direct API request
-    const endpoints = [
-      `${API_URL}/posts?featured=true`,
-      `${POSTS_URL}?featured=true`,
-      `/api/posts?featured=true`
-    ];
+    const response = await fetch(`${API_URL}/posts?featured=true`);
     
-    for (const endpoint of endpoints) {
-      try {
-        const response = await fetch(endpoint);
-        
-        if (!response.ok) {
-          continue; // Try next endpoint
-        }
-        
-        const contentType = response.headers.get('content-type');
-        if (!contentType || !contentType.includes('application/json')) {
-          continue; // Try next endpoint
-        }
-        
-        const posts = await response.json();
-        if (Array.isArray(posts) && posts.length > 0) {
-          return posts;
-        } else if (posts && posts.posts && Array.isArray(posts.posts)) {
-          return posts.posts;
-        }
-      } catch (endpointError) {
-        console.error(`Error fetching from ${endpoint}:`, endpointError);
-        // Continue to next endpoint
-      }
+    if (!response.ok) {
+      throw new Error(`API error: ${response.status}`);
     }
     
-    // Fall back to filtering the cache
-    console.log("Falling back to cache for featured posts");
-    return postCache.filter(post => post.featured);
+    const posts = await response.json();
+    return Array.isArray(posts) ? posts : (posts.posts || []);
   } catch (error) {
     console.error("Error in getFeaturedPosts:", error);
-    return postCache.filter(post => post.featured);
+    
+    // Filter from cache or initial posts
+    return (postCache.length > 0 ? postCache : initialBlogPosts)
+      .filter(post => post.featured);
   }
 };
 
 // Get post by slug
-export const getPostBySlug = async (slug: string) => {
-  console.log(`Looking for post with slug: ${slug}`);
-  
+export const getPostBySlug = async (slug: string): Promise<BlogPost | undefined> => {
   try {
-    // Try to get from API first
     const response = await fetch(`${API_URL}/posts?slug=${slug}`);
     
     if (!response.ok) {
       throw new Error(`API error: ${response.status}`);
     }
     
-    // Check if response is JSON
-    const contentType = response.headers.get('content-type');
-    if (!contentType || !contentType.includes('application/json')) {
-      throw new Error('Invalid response format - not JSON');
-    }
-    
     const posts = await response.json();
-    console.log("API response for slug:", posts);
     
-    if (posts.length > 0) {
+    if (Array.isArray(posts) && posts.length > 0) {
       return posts[0];
     }
     
-    throw new Error("Post not found in API");
+    throw new Error("Post not found");
   } catch (error) {
     console.error(`Error fetching post by slug ${slug}:`, error);
     
-    // Fallback to cache
-    console.log(`Looking in cache for slug: ${slug}`);
-    const post = postCache.find(post => post.slug === slug);
-    console.log("Found in cache:", post ? post.title : "Not found");
-    return post;
+    // Look in cache first
+    const fromCache = postCache.find(post => post.slug === slug);
+    if (fromCache) return fromCache;
+    
+    // Fallback to initial posts
+    return initialBlogPosts.find(post => post.slug === slug);
   }
 };
 
 // Get posts by category
-export const getPostsByCategory = async (category: string) => {
+export const getPostsByCategory = async (category: string): Promise<BlogPost[]> => {
   try {
     const response = await fetch(`${API_URL}/posts?category=${category}`);
     
@@ -723,27 +631,24 @@ export const getPostsByCategory = async (category: string) => {
       throw new Error(`API error: ${response.status}`);
     }
     
-    // Check if response is JSON
-    const contentType = response.headers.get('content-type');
-    if (!contentType || !contentType.includes('application/json')) {
-      throw new Error('Invalid response format - not JSON');
-    }
-    
-    return await response.json();
+    const posts = await response.json();
+    return Array.isArray(posts) ? posts : (posts.posts || []);
   } catch (error) {
-    console.error("Error in getPostsByCategory:", error);
-    return postCache.filter(post => post.category === category);
+    console.error(`Error fetching posts by category ${category}:`, error);
+    
+    // Filter from cache or initial posts
+    return (postCache.length > 0 ? postCache : initialBlogPosts)
+      .filter(post => post.category === category);
   }
 };
 
 // Search posts
-export const searchPosts = async (query: string) => {
+export const searchPosts = async (query: string): Promise<BlogPost[]> => {
   try {
-    // For full text search, we'll need to fetch all posts and filter client-side
-    const posts = await loadPosts();
+    const allPosts = await getAllPosts();
     const lowercaseQuery = query.toLowerCase();
     
-    return posts.filter(post => 
+    return allPosts.filter(post => 
       post.title.toLowerCase().includes(lowercaseQuery) || 
       post.excerpt.toLowerCase().includes(lowercaseQuery) || 
       post.content.toLowerCase().includes(lowercaseQuery) ||
@@ -753,9 +658,9 @@ export const searchPosts = async (query: string) => {
   } catch (error) {
     console.error("Error in searchPosts:", error);
     
-    // Fallback to cache
+    // Fallback search in initial posts
     const lowercaseQuery = query.toLowerCase();
-    return postCache.filter(post => 
+    return initialBlogPosts.filter(post => 
       post.title.toLowerCase().includes(lowercaseQuery) || 
       post.excerpt.toLowerCase().includes(lowercaseQuery) || 
       post.content.toLowerCase().includes(lowercaseQuery) ||
@@ -766,14 +671,18 @@ export const searchPosts = async (query: string) => {
 };
 
 // Get all categories
-export const getCategories = async () => {
+export const getCategories = async (): Promise<string[]> => {
   try {
-    const posts = await loadPosts();
-    const categories = posts.map(post => post.category);
+    // Try to get from API first
+    const allPosts = await getAllPosts();
+    const categories = allPosts.map(post => post.category);
     return [...new Set(categories)];
   } catch (error) {
     console.error("Error in getCategories:", error);
-    const categories = postCache.map(post => post.category);
+    
+    // Use cache or initial posts as fallback
+    const fallbackPosts = postCache.length > 0 ? postCache : initialBlogPosts;
+    const categories = fallbackPosts.map(post => post.category);
     return [...new Set(categories)];
   }
 };
@@ -800,96 +709,3 @@ export const createPost = async (post: Omit<BlogPost, "id">) => {
     });
     
     if (!response.ok) {
-      throw new Error(`API error: ${response.status}`);
-    }
-    
-    const savedPost = await response.json();
-    console.log("Post created successfully:", savedPost);
-    
-    // Update cache
-    postCache.push(savedPost);
-    
-    // Update localStorage backup
-    localStorage.setItem('blogPosts', JSON.stringify(postCache));
-    
-    return savedPost;
-  } catch (error) {
-    console.error("Error creating post:", error);
-    toast.error("Failed to create post. Please try again.");
-    throw error;
-  }
-};
-
-// Update a post
-export const updatePost = async (id: string, updates: Partial<BlogPost>) => {
-  try {
-    console.log(`Updating post ${id} with:`, updates);
-    
-    // Add updated timestamp
-    const postWithTimestamp = {
-      ...updates,
-      updatedAt: new Date().toISOString(),
-    };
-    
-    // Send to API
-    const response = await fetch(`${API_URL}/posts/${id}`, {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(postWithTimestamp),
-    });
-    
-    if (!response.ok) {
-      throw new Error(`API error: ${response.status}`);
-    }
-    
-    const updatedPost = await response.json();
-    console.log("Post updated successfully:", updatedPost);
-    
-    // Update cache
-    const index = postCache.findIndex(post => post.id === id);
-    if (index !== -1) {
-      postCache[index] = updatedPost;
-      
-      // Update localStorage backup
-      localStorage.setItem('blogPosts', JSON.stringify(postCache));
-    }
-    
-    return updatedPost;
-  } catch (error) {
-    console.error(`Error updating post ${id}:`, error);
-    toast.error("Failed to update post. Please try again.");
-    throw error;
-  }
-};
-
-// Delete a post
-export const deletePost = async (id: string) => {
-  try {
-    console.log(`Deleting post ${id}`);
-    
-    // Send to API
-    const response = await fetch(`${API_URL}/posts/${id}`, {
-      method: 'DELETE',
-    });
-    
-    if (!response.ok) {
-      throw new Error(`API error: ${response.status}`);
-    }
-    
-    console.log("Post deleted successfully");
-    
-    // Update cache
-    postCache = postCache.filter(post => post.id !== id);
-    
-    // Update localStorage backup
-    localStorage.setItem('blogPosts', JSON.stringify(postCache));
-    
-    return true;
-  } catch (error) {
-    console.error(`Error deleting post ${id}:`, error);
-    toast.error("Failed to delete post. Please try again.");
-    throw error;
-  }
-};

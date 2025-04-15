@@ -62,6 +62,23 @@ const Home = () => {
     }
   }, [featuredData, allPostsData]);
   
+  // Force update if we have no posts but there are posts in localStorage
+  useEffect(() => {
+    if (recentPosts.length === 0) {
+      try {
+        const savedPosts = localStorage.getItem('blogPosts');
+        if (savedPosts) {
+          const parsedPosts = JSON.parse(savedPosts);
+          if (Array.isArray(parsedPosts) && parsedPosts.length > 0) {
+            setRecentPosts(parsedPosts);
+          }
+        }
+      } catch (e) {
+        console.warn('Failed to read from localStorage:', e);
+      }
+    }
+  }, [recentPosts.length]);
+  
   return (
     <div className="space-y-12">
       {/* Hero Section */}

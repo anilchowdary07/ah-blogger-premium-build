@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
-import { getPostsByCategory, BlogPost } from "@/services/blogService";
+import { getPostsByCategory, BlogPost, getAllPosts } from "@/services/blogService";
 import BlogCard from "@/components/BlogCard";
 import CategoryList from "@/components/CategoryList";
 import { toast } from "sonner";
@@ -23,6 +23,15 @@ const CategoryPage = () => {
     refetchInterval: false
   });
 
+  // Fallback query to get all posts if category-specific query fails
+  const { data: allPostsData } = useQuery({
+    queryKey: ['allPosts'],
+    queryFn: getAllPosts,
+    retry: 3,
+    enabled: isError, // Only run this query if the category-specific query fails
+    staleTime: 30000
+  });
+
   // Handle errors with useEffect
   useEffect(() => {
     if (isError) {
@@ -31,17 +40,45 @@ const CategoryPage = () => {
         duration: 3000
       });
       console.error(`Error fetching posts by category ${category}:`, error);
+      
+      // If we have all posts data, filter by category as fallback
+      if (allPostsData) {
+        const filteredPosts = allPostsData.filter(post => 
+          post.category === category
+        );
+        setPosts(filteredPosts);
+      }
     }
-  }, [isError, error, category]);
+  }, [isError, error, category, allPostsData]);
 
   // Update posts when data changes
   useEffect(() => {
-    if (data) {
+    if (data && data.length > 0) {
       setPosts(data);
       // Scroll to top with smooth animation
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   }, [data]);
+
+  // Try to get posts from localStorage if we have no posts
+  useEffect(() => {
+    if (posts.length === 0 && !isLoading) {
+      try {
+        const savedPosts = localStorage.getItem('blogPosts');
+        if (savedPosts) {
+          const parsedPosts = JSON.parse(savedPosts);
+          if (Array.isArray(parsedPosts)) {
+            const filteredPosts = parsedPosts.filter(post => post.category === category);
+            if (filteredPosts.length > 0) {
+              setPosts(filteredPosts);
+            }
+          }
+        }
+      } catch (e) {
+        console.warn('Failed to read from localStorage:', e);
+      }
+    }
+  }, [posts.length, isLoading, category]);
 
   if (isLoading) {
     return (
