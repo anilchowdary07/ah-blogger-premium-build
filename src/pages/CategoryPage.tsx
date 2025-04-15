@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { getPostsByCategory, BlogPost } from "@/services/blogService";
@@ -10,8 +11,8 @@ const CategoryPage = () => {
   const { category } = useParams<{ category: string }>();
   const [posts, setPosts] = useState<BlogPost[]>([]);
 
-  // Use React Query with better retry logic and proper error handling
-  const { isLoading, data, error } = useQuery({
+  // Use React Query with proper configuration for v5
+  const { isLoading, data, error, isError } = useQuery({
     queryKey: ['posts', category],
     queryFn: () => category ? getPostsByCategory(category) : Promise.resolve([]),
     retry: 3,
@@ -19,15 +20,19 @@ const CategoryPage = () => {
     staleTime: 30000, // 30 seconds
     refetchOnWindowFocus: false,
     refetchOnReconnect: true,
-    refetchInterval: false,
-    onError: (error) => {
+    refetchInterval: false
+  });
+
+  // Handle errors with useEffect
+  useEffect(() => {
+    if (isError) {
       toast.error(`Failed to load ${category} posts. Showing available content.`, {
         id: "category-posts-error",
         duration: 3000
       });
       console.error(`Error fetching posts by category ${category}:`, error);
     }
-  });
+  }, [isError, error, category]);
 
   // Update posts when data changes
   useEffect(() => {
@@ -37,13 +42,6 @@ const CategoryPage = () => {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   }, [data]);
-
-  // Handle errors with useEffect
-  useEffect(() => {
-    if (error) {
-      console.error(`Error fetching posts by category ${category}:`, error);
-    }
-  }, [error, category]);
 
   if (isLoading) {
     return (

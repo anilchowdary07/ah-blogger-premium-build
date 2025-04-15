@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { getCategories } from '@/services/blogService';
@@ -9,8 +10,8 @@ const CategoryList = () => {
   const [categories, setCategories] = useState<string[]>(["technology", "science", "culture", "business"]);
   const location = useLocation();
 
-  // Use React Query with better retry logic and proper error handling
-  const { data: fetchedCategories, isError } = useQuery({
+  // Use React Query with proper configuration for v5
+  const { data: fetchedCategories, isError, error } = useQuery({
     queryKey: ['categories'],
     queryFn: getCategories,
     retry: 3,
@@ -18,15 +19,19 @@ const CategoryList = () => {
     staleTime: 5 * 60 * 1000, // 5 minutes
     refetchOnWindowFocus: false,
     refetchOnReconnect: true,
-    refetchInterval: false,
-    onError: (error) => {
+    refetchInterval: false
+  });
+
+  // Handle errors with useEffect
+  useEffect(() => {
+    if (isError) {
       toast.error("Couldn't load categories. Using defaults.", {
         id: "categories-error",
         duration: 3000
       });
       console.error("Error fetching categories:", error);
     }
-  });
+  }, [isError, error]);
 
   // Update categories when data is available
   useEffect(() => {
