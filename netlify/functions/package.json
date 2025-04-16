@@ -1,10 +1,9 @@
-
 {
-  "name": "blog-api-server",
+  "name": "netlify-functions",
   "version": "1.0.0",
-  "description": "SQLite API for blog with Netlify Functions",
+  "private": true,
   "dependencies": {
-    "json-server": "^1.0.0-beta.3",
-    "sqlite3": "^5.1.7"
+    "@notionhq/client": "^2.2.14",
+    "uuid": "^9.0.1"
   }
 }

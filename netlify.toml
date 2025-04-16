@@ -1,11 +1,17 @@
 # netlify.toml
 [build]
-  command = "npm run build"
+  command = "npm install && npm run build"
   publish = "dist"
 
 # Handle API requests to the serverless function
 [[redirects]]
   from = "/api/*"
+  to = "/.netlify/functions/:splat"
+  status = 200
+
+# Handle Netlify Functions requests
+[[redirects]]
+  from = "/.netlify/functions/*"
   to = "/.netlify/functions/:splat"
   status = 200
 
@@ -17,16 +23,25 @@
 
 # Specify the Node.js version for functions
 [build.environment]
-  NODE_VERSION = "18"
+  NODE_VERSION = "20"
+
+# Environment variables for development
+[build.environment.development]
+  NOTION_TOKEN = "your_development_notion_token"
+  NOTION_DATABASE_ID = "your_development_database_id"
 
 # Configure function bundle settings
 [functions]
   directory = "netlify/functions"
   node_bundler = "esbuild"
-  external_node_modules = ["sqlite3"]
+  included_files = ["package.json", "package-lock.json"]
 
 # Add caching for improved performance
 [[headers]]
   for = "/assets/*"
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"
+
+# Add functions install plugin
+[[plugins]]
+  package = "@netlify/plugin-functions-install-core"

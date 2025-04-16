@@ -14,6 +14,12 @@
     "skipLibCheck": true,
     "allowJs": true,
     "noUnusedLocals": false,
-    "strictNullChecks": false
-  }
+    "strictNullChecks": false,
+    "module": "CommonJS",
+    "esModuleInterop": true
+  },
+  "include": [
+    "src/**/*",
+    "src/services/testStorageService.ts"
+  ]
 }
